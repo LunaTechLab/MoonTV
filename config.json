@@ -81,9 +81,10 @@
       "api": "https://ikunzyapi.com/api.php/provide/vod",
       "name": "iKun资源"
     },
-    "huyazy": {
-      "api": "https://www.huyaapi.com/api.php/provide/vod",
-      "name": "虎牙资源"      
+    "jmzy1": {
+      "api": "https://api.jmzy.com/api.php/provide/vod",
+      "name": "金马资源"      
+      
     }
   }
 }
