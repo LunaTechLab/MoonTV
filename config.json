@@ -81,7 +81,7 @@
       "api": "https://ikunzyapi.com/api.php/provide/vod",
       "name": "iKun资源"
     },
-    "jmzy1": {
+    "jmzy": {
       "api": "https://api.jmzy.com/api.php/provide/vod",
       "name": "金马资源"      
       
