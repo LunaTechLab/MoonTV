@@ -1,6 +1,9 @@
+'use client';
+
 import {
   Clover,
   Film,
+  Github,
   Home,
   Menu,
   MessageCircleHeart,
@@ -22,6 +25,8 @@ import {
   useState,
 } from 'react';
 
+import { useSite } from './SiteProvider';
+
 interface SidebarContextType {
   isCollapsed: boolean;
 }
@@ -33,16 +38,19 @@ const SidebarContext = createContext<SidebarContextType>({
 export const useSidebar = () => useContext(SidebarContext);
 
 // 可替换为你自己的 logo 图片
-const Logo = () => (
-  <Link
-    href='/'
-    className='flex items-center justify-center h-16 select-none hover:opacity-80 transition-opacity duration-200'
-  >
-    <span className='text-2xl font-bold text-green-600 tracking-tight'>
-      {process.env.NEXT_PUBLIC_SITE_NAME || 'MoonTV'}
-    </span>
-  </Link>
-);
+const Logo = () => {
+  const { siteName } = useSite();
+  return (
+    <Link
+      href='/'
+      className='flex items-center justify-center h-16 select-none hover:opacity-80 transition-opacity duration-200'
+    >
+      <span className='text-2xl font-bold text-green-600 tracking-tight'>
+        {siteName}
+      </span>
+    </Link>
+  );
+};
 
 interface SidebarProps {
   onToggle?: (collapsed: boolean) => void;
@@ -157,6 +165,15 @@ const Sidebar = ({ onToggle, activePath = '/' }: SidebarProps) => {
     { icon: MountainSnow, label: '日剧', href: '/douban?type=tv&tag=日剧' },
     { icon: VenetianMask, label: '日漫', href: '/douban?type=tv&tag=日本动画' },
   ];
+
+  const { siteName } = useSite();
+  if (siteName !== 'MoonTV') {
+    menuItems.push({
+      icon: Github,
+      label: 'MoonTV',
+      href: 'https://github.com/senshinya/MoonTV',
+    });
+  }
 
   return (
     <SidebarContext.Provider value={contextValue}>

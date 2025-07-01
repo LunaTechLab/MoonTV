@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 /* eslint-disable @typescript-eslint/no-var-requires */
 const nextConfig = {
+  output: 'standalone',
   eslint: {
     dirs: ['src'],
   },

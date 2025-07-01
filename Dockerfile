@@ -28,6 +28,9 @@ RUN find ./src -type f -name "route.ts" -print0 \
   | xargs -0 sed -i "s/export const runtime = 'edge';/export const runtime = 'nodejs';/g"
 ENV DOCKER_ENV=true
 
+# For Docker builds, force dynamic rendering to read runtime environment variables.
+RUN sed -i "/const inter = Inter({ subsets: \['latin'] });/a export const dynamic = 'force-dynamic';" src/app/layout.tsx
+
 # 生成生产构建
 RUN pnpm run build
 
@@ -42,18 +45,17 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV DOCKER_ENV=true
 
-# 复制必要文件
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/next.config.js ./next.config.js
-COPY --from=builder /app/config.json ./config.json
+# 从构建器中复制 standalone 输出
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+# 从构建器中复制 public 和 .next/static 目录
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/config.json ./config.json
 
 # 切换到非特权用户
 USER nextjs
 
 EXPOSE 3000
 
-# 使用 next binary 启动
-CMD ["node_modules/.bin/next", "start", "-H", "0.0.0.0", "-p", "3000"] 
+# 使用 node 直接运行 server.js
+CMD ["node", "server.js"] 

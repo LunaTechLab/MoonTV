@@ -3,6 +3,7 @@
 import {
   Clover,
   Film,
+  Github,
   Home,
   MessageCircleHeart,
   MountainSnow,
@@ -14,6 +15,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+
+import { useSite } from './SiteProvider';
 
 interface MobileBottomNavProps {
   /**
@@ -60,6 +63,15 @@ const MobileBottomNav = ({ activePath }: MobileBottomNavProps) => {
     { icon: MountainSnow, label: '日剧', href: '/douban?type=tv&tag=日剧' },
     { icon: VenetianMask, label: '日漫', href: '/douban?type=tv&tag=日本动画' },
   ];
+
+  const { siteName } = useSite();
+  if (siteName !== 'MoonTV') {
+    navItems.push({
+      icon: Github,
+      label: 'MoonTV',
+      href: 'https://github.com/senshinya/MoonTV',
+    });
+  }
 
   const isActive = (href: string) => {
     const typeMatch = href.match(/type=([^&]+)/)?.[1];

@@ -32,6 +32,7 @@ export interface SearchResult {
 }
 
 export interface DoubanItem {
+  id: string;
   title: string;
   poster: string;
   rate: string;

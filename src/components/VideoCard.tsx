@@ -218,7 +218,7 @@ export default function VideoCard({
 
           {/* 集数指示器 - 绿色小圆球 */}
           {episodes && episodes > 1 && (
-            <div className='absolute top-2 right-2 w-4 h-4 sm:w-6 sm:h-6 bg-green-500 rounded-full flex items-center justify-center'>
+            <div className='absolute top-2 right-2 w-4 h-4 sm:w-7 sm:h-7 bg-green-500 rounded-full flex items-center justify-center'>
               <span className='text-white text-[0.5rem] sm:text-xs font-bold'>
                 {episodes}
               </span>
@@ -237,7 +237,7 @@ export default function VideoCard({
 
           {/* 当前播放集数 */}
           {currentEpisode && episodes && episodes > 1 && (
-            <div className='absolute top-2 left-2 w-4 h-4 sm:w-6 sm:h-6 bg-blue-500 rounded-full flex items-center justify-center'>
+            <div className='absolute top-2 left-2 w-4 h-4 sm:w-7 sm:h-7 bg-blue-500 rounded-full flex items-center justify-center'>
               <span className='text-white text-[0.5rem] sm:text-xs font-bold'>
                 {currentEpisode}
               </span>

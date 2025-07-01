@@ -3,6 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 
+import { useSite } from '@/components/SiteProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 function LoginPageClient() {
@@ -11,6 +12,7 @@ function LoginPageClient() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { siteName } = useSite();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -27,6 +29,11 @@ function LoginPageClient() {
       });
 
       if (res.ok) {
+        // 保存密码以供后续请求使用
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('password', password);
+        }
+
         const redirect = searchParams.get('redirect') || '/';
         router.replace(redirect);
       } else if (res.status === 401) {
@@ -47,7 +54,7 @@ function LoginPageClient() {
       </div>
       <div className='relative z-10 w-full max-w-md rounded-3xl bg-gradient-to-b from-white/90 via-white/70 to-white/40 dark:from-zinc-900/90 dark:via-zinc-900/70 dark:to-zinc-900/40 backdrop-blur-xl shadow-2xl p-10 dark:border dark:border-zinc-800'>
         <h1 className='text-green-600 tracking-tight text-center text-3xl font-extrabold mb-8 bg-clip-text drop-shadow-sm'>
-          {process.env.NEXT_PUBLIC_SITE_NAME || 'MoonTV'}
+          {siteName}
         </h1>
         <form onSubmit={handleSubmit} className='space-y-8'>
           <div>

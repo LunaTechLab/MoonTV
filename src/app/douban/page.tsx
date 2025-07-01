@@ -199,6 +199,7 @@ function DoubanPageClient() {
                     doubanData.map((item, index) => (
                       <div key={`${item.title}-${index}`} className='w-full'>
                         <DemoCard
+                          id={item.id}
                           title={item.title}
                           poster={item.poster}
                           rate={item.rate}
