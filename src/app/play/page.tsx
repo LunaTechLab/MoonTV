@@ -123,13 +123,13 @@ function PlayPageClient() {
   // 上次使用的音量，默认 0.7
   const lastVolumeRef = useRef<number>(0.7);
 
-  // 新增：去广告开关（从 localStorage 继承，默认取环境变量）
+  // 新增：去广告开关（从 localStorage 继承，默认 true）
   const [blockAdEnabled, _setBlockAdEnabled] = useState<boolean>(() => {
     if (typeof window !== 'undefined') {
       const v = localStorage.getItem('enable_blockad');
       if (v !== null) return v === 'true';
     }
-    return process.env.NEXT_PUBLIC_ENABLE_BLOCKAD === 'true';
+    return true;
   });
 
   // 同步最新值到 refs
@@ -494,7 +494,12 @@ function PlayPageClient() {
             result.title.toLowerCase() === videoTitle.toLowerCase() &&
             (videoYear
               ? result.year.toLowerCase() === videoYear.toLowerCase()
-              : true)
+              : true) &&
+            detailRef.current?.episodes.length &&
+            ((detailRef.current?.episodes.length === 1 &&
+              result.episodes.length === 1) ||
+              (detailRef.current?.episodes.length > 1 &&
+                result.episodes.length > 1))
         );
 
         if (exactMatch) {
@@ -1350,26 +1355,55 @@ function PlayPageClient() {
             muteButton: null, // 隐藏静音按钮
             volumeSlider: null, // 隐藏音量条
             airPlayButton: null, // 隐藏默认 AirPlay 按钮
-            beforeCurrentTime:
-              totalEpisodes > 1 ? (
-                // 下一集按钮放在时间显示前
+            beforeCurrentTime: (
+              <>
+                {/* 快进 10 秒按钮 - 移动端隐藏 */}
                 <button
-                  className='vds-button mr-2'
-                  onClick={handleNextEpisode}
-                  aria-label='Next Episode'
+                  className='vds-button hidden md:inline-flex mr-2'
+                  onClick={() => {
+                    if (playerRef.current) {
+                      const p = playerRef.current;
+                      const newTime = Math.min(
+                        (p.currentTime || 0) + 10,
+                        p.duration || 0
+                      );
+                      p.currentTime = newTime;
+                    }
+                  }}
+                  aria-label='Fast Forward 10 Seconds'
                 >
                   <svg
                     className='vds-icon'
                     viewBox='0 0 32 32'
                     xmlns='http://www.w3.org/2000/svg'
                   >
-                    <path
-                      d='M6 24l12-8L6 8v16zM22 8v16h3V8h-3z'
-                      fill='currentColor'
-                    />
+                    {/* 双三角快进图标 */}
+                    <path d='M6 24l10-8L6 8v16z' fill='currentColor' />
+                    <path d='M18 24l10-8-10-8v16z' fill='currentColor' />
                   </svg>
                 </button>
-              ) : null,
+
+                {totalEpisodes > 1 && (
+                  // 下一集按钮放在时间显示前
+                  <button
+                    className='vds-button mr-2'
+                    onClick={handleNextEpisode}
+                    aria-label='Next Episode'
+                  >
+                    <svg
+                      className='vds-icon'
+                      viewBox='0 0 32 32'
+                      xmlns='http://www.w3.org/2000/svg'
+                    >
+                      <path
+                        d='M6 24l12-8L6 8v16zM22 8v16h3V8h-3z'
+                        fill='currentColor'
+                      />
+                    </svg>
+                  </button>
+                )}
+              </>
+            ),
             beforeFullscreenButton: (
               <>
                 <button
@@ -1394,6 +1428,30 @@ function PlayPageClient() {
                   <AirPlayIcon className='vds-icon' />
                 </AirPlayButton>
               </>
+            ),
+            // 快退 10 秒按钮（移动端隐藏）
+            beforePlayButton: (
+              <button
+                className='vds-button hidden md:inline-flex mr-2'
+                onClick={() => {
+                  if (playerRef.current) {
+                    const p = playerRef.current;
+                    const newTime = Math.max(0, (p.currentTime || 0) - 10);
+                    p.currentTime = newTime;
+                  }
+                }}
+                aria-label='Rewind 10 Seconds'
+              >
+                <svg
+                  className='vds-icon'
+                  viewBox='0 0 32 32'
+                  xmlns='http://www.w3.org/2000/svg'
+                >
+                  {/* 双三角快退图标 */}
+                  <path d='M26 24l-10-8 10-8v16z' fill='currentColor' />
+                  <path d='M14 24l-10-8 10-8v16z' fill='currentColor' />
+                </svg>
+              </button>
             ),
           }}
         />

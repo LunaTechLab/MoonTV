@@ -203,6 +203,7 @@ function DoubanPageClient() {
                           title={item.title}
                           poster={item.poster}
                           rate={item.rate}
+                          type={type || 'movie'}
                         />
                       </div>
                     ))}

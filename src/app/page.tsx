@@ -197,6 +197,7 @@ function HomeClient() {
                             title={movie.title}
                             poster={movie.poster}
                             rate={movie.rate}
+                            type='movie'
                           />
                         </div>
                       ))}
@@ -242,6 +243,7 @@ function HomeClient() {
                             title={show.title}
                             poster={show.poster}
                             rate={show.rate}
+                            type='tv'
                           />
                         </div>
                       ))}

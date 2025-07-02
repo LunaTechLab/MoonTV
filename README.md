@@ -79,8 +79,8 @@
 2. 登陆 [Cloudflare](https://cloudflare.com)，点击 **计算（Workers）-> Workers 和 Pages**，点击创建
 3. 选择 Pages，导入现有的 Git 存储库，选择 Fork 后的仓库
 4. 构建命令填写 **pnpm install --frozen-lockfile && pnpm run pages:build**，预设框架为无，构建输出目录保持空
-5. （强烈建议）设置 PASSWORD 环境变量。
-6. 保持默认设置完成首次部署。
+5. 保持默认设置完成首次部署。
+6. （强烈建议）首次部署完成后进入设置，新增 PASSWORD 密钥（变量和机密下），而后重试部署。
 7. 如需自定义 `config.json`，请直接修改 Fork 后仓库中该文件。
 8. 每次 Push 到 `main` 分支将自动触发重新构建。
 
@@ -144,7 +144,6 @@ Pull Bot 会反复触发无效的 PR 和垃圾邮件，严重干扰项目维护�
 | PASSWORD                            | 实例访问密码，留空则不启用密码保护 | 任意字符串                                                       | （空）       |
 | SITE_NAME                           | 站点名称                           | 任意字符串                                                       | MoonTV       |
 | NEXT_PUBLIC_STORAGE_TYPE            | 播放记录/收藏的存储方式            | localstorage（本地浏览器存储）、database（后端数据库，暂不支持） | localstorage |
-| NEXT_PUBLIC_ENABLE_BLOCKAD          | 开启智能去广告功能（实验性）       | true / false                                                     | false        |
 | NEXT_PUBLIC_SEARCH_MAX_PAGE         | 搜索接口可拉取的最大页数           | 1-50                                                             | 5            |
 | NEXT_PUBLIC_AGGREGATE_SEARCH_RESULT | 搜索结果默认是否按标题和年份聚合   | true / false                                                     | true         |
 

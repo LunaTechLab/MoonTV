@@ -44,7 +44,9 @@ function SearchPageClient() {
     const map = new Map<string, SearchResult[]>();
     searchResults.forEach((item) => {
       // 使用 title + year 作为键，若 year 不存在则使用 'unknown'
-      const key = `${item.title}-${item.year || 'unknown'}`;
+      const key = `${item.title}-${item.year || 'unknown'}-${
+        item.episodes.length === 1 ? 'movie' : 'tv'
+      }`;
       const arr = map.get(key) || [];
       arr.push(item);
       map.set(key, arr);
@@ -196,6 +198,7 @@ function SearchPageClient() {
                           episodes={item.episodes.length}
                           source={item.source}
                           source_name={item.source_name}
+                          douban_id={item.douban_id}
                           from='search'
                         />
                       </div>

@@ -2,6 +2,7 @@
 
 'use client';
 
+import { LinkIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
@@ -15,6 +16,7 @@ function AggregatePageClient() {
   const query = searchParams.get('q')?.trim() || '';
   const title = searchParams.get('title')?.trim() || '';
   const year = searchParams.get('year')?.trim() || '';
+  const type = searchParams.get('type')?.trim() || '';
 
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(true);
@@ -46,11 +48,32 @@ function AggregatePageClient() {
           if (!titleMatch || !yearMatch) {
             return;
           }
+          // 如果还传入了 type，则按 type 精确匹配
+          if (type === 'tv' && r.episodes.length === 1) {
+            return;
+          }
+          if (type === 'movie' && r.episodes.length !== 1) {
+            return;
+          }
           const key = `${r.title}-${r.year}`;
           const arr = map.get(key) || [];
           arr.push(r);
           map.set(key, arr);
         });
+        if (map.size === 0 && type) {
+          // 无匹配，忽略 type 做重新匹配
+          all.forEach((r) => {
+            const titleMatch = title ? r.title === title : r.title === query;
+            const yearMatch = year ? r.year === year : true;
+            if (!titleMatch || !yearMatch) {
+              return;
+            }
+            const key = `${r.title}-${r.year}`;
+            const arr = map.get(key) || [];
+            arr.push(r);
+            map.set(key, arr);
+          });
+        }
         if (map.size == 1) {
           setResults(Array.from(map.values()).flat());
         } else if (map.size > 1) {
@@ -75,6 +98,24 @@ function AggregatePageClient() {
       return v.length > best.length ? v : best;
     }, undefined);
   };
+  // 出现次数最多的非 0 数字
+  const chooseNumber = (vals: (number | undefined)[]): number | undefined => {
+    const countMap = new Map<number, number>();
+    vals.forEach((v) => {
+      if (v !== undefined && v !== 0) {
+        countMap.set(v, (countMap.get(v) || 0) + 1);
+      }
+    });
+    let selected: number | undefined = undefined;
+    let maxCount = 0;
+    countMap.forEach((cnt, num) => {
+      if (cnt > maxCount) {
+        maxCount = cnt;
+        selected = num;
+      }
+    });
+    return selected;
+  };
 
   const aggregatedInfo = {
     title: title || query,
@@ -83,6 +124,7 @@ function AggregatePageClient() {
     type: chooseString(results.map((d) => d.type_name)),
     year: chooseString(results.map((d) => d.year)),
     remarks: chooseString(results.map((d) => d.class)),
+    douban_id: chooseNumber(results.map((d) => d.douban_id)),
   };
 
   const infoReady = Boolean(
@@ -166,6 +208,17 @@ function AggregatePageClient() {
               >
                 <h1 className='text-3xl font-bold mb-2 tracking-wide flex items-center flex-shrink-0 text-center md:text-left w-full'>
                   {aggregatedInfo.title}
+                  {aggregatedInfo.douban_id && (
+                    <a
+                      href={`https://movie.douban.com/subject/${aggregatedInfo.douban_id}/`}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      onClick={(e) => e.stopPropagation()}
+                      className='ml-2'
+                    >
+                      <LinkIcon className='w-4 h-4' strokeWidth={2} />
+                    </a>
+                  )}
                 </h1>
                 <div className='flex flex-wrap items-center gap-3 text-base mb-4 opacity-80 flex-shrink-0'>
                   {aggregatedInfo.remarks && (

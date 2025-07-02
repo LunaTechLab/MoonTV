@@ -9,6 +9,7 @@ export interface VideoDetail {
   year: string;
   desc?: string;
   type_name?: string;
+  douban_id?: number;
 }
 
 interface FetchVideoDetailOptions {

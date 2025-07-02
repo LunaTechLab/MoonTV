@@ -2,7 +2,7 @@
 
 'use client';
 
-import { Heart } from 'lucide-react';
+import { Heart, LinkIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
@@ -173,6 +173,17 @@ function DetailPageClient() {
               >
                 <h1 className='text-3xl font-bold mb-2 tracking-wide flex items-center flex-shrink-0 text-center md:text-left w-full'>
                   {detail.title || fallbackTitle}
+                  {detail.douban_id && (
+                    <a
+                      href={`https://movie.douban.com/subject/${detail.douban_id}/`}
+                      target='_blank'
+                      rel='noopener noreferrer'
+                      onClick={(e) => e.stopPropagation()}
+                      className='ml-2'
+                    >
+                      <LinkIcon className='w-4 h-4' strokeWidth={2} />
+                    </a>
+                  )}
                 </h1>
                 <div className='flex flex-wrap items-center gap-3 text-base mb-4 opacity-80 flex-shrink-0'>
                   {detail.class && (

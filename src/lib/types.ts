@@ -29,6 +29,7 @@ export interface SearchResult {
   year: string;
   desc?: string;
   type_name?: string;
+  douban_id?: number;
 }
 
 export interface DoubanItem {
