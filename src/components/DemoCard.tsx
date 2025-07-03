@@ -1,7 +1,7 @@
 import { Link as LinkIcon, Search } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import React, { useState } from 'react';
+import React from 'react';
 
 interface DemoCardProps {
   id: string;
@@ -45,7 +45,6 @@ function SearchCircle({
 }
 
 const DemoCard = ({ id, title, poster, rate, type }: DemoCardProps) => {
-  const [hover, setHover] = useState(false);
   const router = useRouter();
 
   const handleClick = () => {
@@ -58,7 +57,7 @@ const DemoCard = ({ id, title, poster, rate, type }: DemoCardProps) => {
       onClick={handleClick}
     >
       {/* 海报图片区域 */}
-      <div className='relative aspect-[2/3] w-full overflow-hidden rounded-md group-hover:scale-[1.02] transition-all duration-400 cubic-bezier(0.4, 0, 0.2, 1)'>
+      <div className='relative aspect-[2/3] w-full overflow-hidden rounded-md transition-all duration-400 cubic-bezier(0.4, 0, 0.2, 1)'>
         <Image
           src={poster}
           alt={title}
@@ -78,15 +77,12 @@ const DemoCard = ({ id, title, poster, rate, type }: DemoCardProps) => {
         )}
 
         {/* 悬浮层 - 搜索按钮 */}
-        <div className='absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1) flex items-center justify-center'>
-          <div
-            onMouseEnter={() => setHover(true)}
-            onMouseLeave={() => setHover(false)}
-            className={`transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1) ${
-              hover ? 'scale-110 rotate-12' : 'scale-90'
-            }`}
-          >
-            <SearchCircle fillColor={hover ? '#22c55e' : 'none'} />
+        <div
+          style={{ willChange: 'opacity' }}
+          className='absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1) flex items-center justify-center'
+        >
+          <div className='transition-all duration-300 cubic-bezier(0.4, 0, 0.2, 1) scale-90 group-hover:scale-110 group-hover:rotate-12'>
+            <SearchCircle className='group-hover:fill-green-500' />
           </div>
         </div>
 

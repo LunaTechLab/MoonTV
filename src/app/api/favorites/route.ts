@@ -2,23 +2,45 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
-import { db } from '@/lib/db';
-import { PlayRecord } from '@/lib/db';
+import { db, Favorite } from '@/lib/db';
 
 export const runtime = 'edge';
 
+/**
+ * GET /api/favorites
+ *
+ * 支持两种调用方式：
+ * 1. 不带 query，返回全部收藏列表（Record<string, Favorite>）。
+ * 2. 带 key=source+id，返回单条收藏（Favorite | null）。
+ */
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
+    const key = searchParams.get('key');
     const user = searchParams.get('user');
+
     if (!user) {
       return NextResponse.json({ error: 'Missing user' }, { status: 400 });
     }
 
-    const records = await db.getAllPlayRecords(user);
-    return NextResponse.json(records, { status: 200 });
+    // 查询单条收藏
+    if (key) {
+      const [source, id] = key.split('+');
+      if (!source || !id) {
+        return NextResponse.json(
+          { error: 'Invalid key format' },
+          { status: 400 }
+        );
+      }
+      const fav = await db.getFavorite(user, source, id);
+      return NextResponse.json(fav, { status: 200 });
+    }
+
+    // 查询全部收藏
+    const favorites = await db.getAllFavorites(user);
+    return NextResponse.json(favorites, { status: 200 });
   } catch (err) {
-    console.error('获取播放记录失败', err);
+    console.error('获取收藏失败', err);
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }
@@ -26,35 +48,38 @@ export async function GET(request: NextRequest) {
   }
 }
 
+/**
+ * POST /api/favorites
+ * body: { user?: string; key: string; favorite: Favorite }
+ */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const {
       user,
       key,
-      record,
-    }: { user?: string; key: string; record: PlayRecord } = body;
+      favorite,
+    }: { user?: string; key: string; favorite: Favorite } = body;
 
     if (!user) {
       return NextResponse.json({ error: 'Missing user' }, { status: 400 });
     }
 
-    if (!key || !record) {
+    if (!key || !favorite) {
       return NextResponse.json(
-        { error: 'Missing key or record' },
+        { error: 'Missing key or favorite' },
         { status: 400 }
       );
     }
 
-    // 验证播放记录数据
-    if (!record.title || !record.source_name || record.index < 1) {
+    // 验证必要字段
+    if (!favorite.title || !favorite.source_name) {
       return NextResponse.json(
-        { error: 'Invalid record data' },
+        { error: 'Invalid favorite data' },
         { status: 400 }
       );
     }
 
-    // 从key中解析source和id
     const [source, id] = key.split('+');
     if (!source || !id) {
       return NextResponse.json(
@@ -63,23 +88,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 保存播放记录（不包含user_id，将由savePlayRecord自动添加）
-    const recordWithoutUserId = {
-      title: record.title,
-      source_name: record.source_name,
-      cover: record.cover,
-      index: record.index,
-      total_episodes: record.total_episodes,
-      play_time: record.play_time,
-      total_time: record.total_time,
-      save_time: record.save_time,
-    };
+    const favoriteWithoutUserId = {
+      ...favorite,
+      save_time: favorite.save_time ?? Date.now(),
+    } as Omit<Favorite, 'user_id'>;
 
-    await db.savePlayRecord(user, source, id, recordWithoutUserId);
+    await db.saveFavorite(user, source, id, favoriteWithoutUserId);
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (err) {
-    console.error('保存播放记录失败', err);
+    console.error('保存收藏失败', err);
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }
@@ -87,6 +105,12 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * DELETE /api/favorites
+ *
+ * 1. 不带 query -> 清空全部收藏
+ * 2. 带 key=source+id -> 删除单条收藏
+ */
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -98,7 +122,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     if (key) {
-      // 如果提供了 key，删除单条播放记录
+      // 删除单条
       const [source, id] = key.split('+');
       if (!source || !id) {
         return NextResponse.json(
@@ -106,23 +130,21 @@ export async function DELETE(request: NextRequest) {
           { status: 400 }
         );
       }
-
-      await db.deletePlayRecord(user, source, id);
+      await db.deleteFavorite(user, source, id);
     } else {
-      // 未提供 key，则清空全部播放记录
-      // 目前 DbManager 没有对应方法，这里直接遍历删除
-      const all = await db.getAllPlayRecords(user);
+      // 清空全部
+      const all = await db.getAllFavorites(user);
       await Promise.all(
         Object.keys(all).map(async (k) => {
           const [s, i] = k.split('+');
-          if (s && i) await db.deletePlayRecord(user, s, i);
+          if (s && i) await db.deleteFavorite(user, s, i);
         })
       );
     }
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (err) {
-    console.error('删除播放记录失败', err);
+    console.error('删除收藏失败', err);
     return NextResponse.json(
       { error: 'Internal Server Error' },
       { status: 500 }

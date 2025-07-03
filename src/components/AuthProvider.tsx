@@ -23,8 +23,9 @@ export default function AuthProvider({ children }: Props) {
       return;
     }
 
-    // 从localStorage获取密码
+    // 从localStorage获取密码和用户名
     const password = localStorage.getItem('password');
+    const username = localStorage.getItem('username');
     const fullPath =
       typeof window !== 'undefined'
         ? window.location.pathname + window.location.search
@@ -35,7 +36,7 @@ export default function AuthProvider({ children }: Props) {
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify({ password, username }),
       });
 
       if (!res.ok) throw new Error('认证失败');
@@ -45,6 +46,7 @@ export default function AuthProvider({ children }: Props) {
       // 认证失败，清理并跳转登录
       setIsAuthenticated(false);
       localStorage.removeItem('password');
+      localStorage.removeItem('username');
       router.replace(`/login?redirect=${encodeURIComponent(fullPath)}`);
     }
   }, [pathname, router]);

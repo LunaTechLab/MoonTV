@@ -38,7 +38,9 @@
     "swiper": "^11.2.8",
     "tailwind-merge": "^2.6.0",
     "vidstack": "^0.6.15",
-    "zod": "^3.24.1"
+    "@upstash/redis": "^1.25.0",
+    "zod": "^3.24.1",
+    "redis": "^4.6.7"
   },
   "devDependencies": {
     "@commitlint/cli": "^16.3.0",

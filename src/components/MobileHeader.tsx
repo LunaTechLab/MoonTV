@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 
+import { LogoutButton } from './LogoutButton';
 import { useSite } from './SiteProvider';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -17,7 +18,8 @@ const MobileHeader = () => {
           {siteName}
         </Link>
       </div>
-      <div className='absolute top-1/2 right-4 -translate-y-1/2'>
+      <div className='absolute top-1/2 right-4 -translate-y-1/2 flex items-center gap-2'>
+        <LogoutButton />
         <ThemeToggle />
       </div>
     </header>

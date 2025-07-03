@@ -1,3 +1,4 @@
+import { LogoutButton } from './LogoutButton';
 import MobileBottomNav from './MobileBottomNav';
 import MobileHeader from './MobileHeader';
 import { useSidebar } from './Sidebar';
@@ -22,7 +23,8 @@ const PageLayout = ({ children, activePath = '/' }: PageLayoutProps) => {
             isCollapsed ? 'col-start-2' : 'col-start-2'
           }`}
         >
-          <div className='absolute top-2 right-4 z-20 hidden md:block'>
+          <div className='absolute top-2 right-4 z-20 hidden md:flex items-center gap-2'>
+            <LogoutButton />
             <ThemeToggle />
           </div>
           {children}

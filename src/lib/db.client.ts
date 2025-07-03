@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* eslint-disable no-console, @typescript-eslint/no-explicit-any */
 'use client';
 
 /**
@@ -30,12 +30,31 @@ export interface PlayRecord {
 // ---- 常量 ----
 const PLAY_RECORDS_KEY = 'moontv_play_records';
 
+// +++ 新增：获取当前用户名工具函数 +++
+/**
+ * 从 localStorage 中读取当前用户名
+ * 如果不存在则返回 undefined
+ */
+function getUsername(): string | undefined {
+  if (typeof window === 'undefined') return undefined;
+  try {
+    const name = localStorage.getItem('username')?.trim();
+    return name || undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 // ---- 环境变量 ----
-const STORAGE_TYPE =
-  (process.env.NEXT_PUBLIC_STORAGE_TYPE as
-    | 'localstorage'
-    | 'database'
-    | undefined) || 'localstorage';
+const STORAGE_TYPE = (() => {
+  const raw =
+    (typeof window !== 'undefined' &&
+      (window as any).RUNTIME_CONFIG?.STORAGE_TYPE) ||
+    (process.env.STORAGE_TYPE as 'localstorage' | 'redis' | undefined) ||
+    'localstorage';
+  // 兼容 redis => database
+  return raw;
+})();
 
 // ---------------- 搜索历史相关常量 ----------------
 const SEARCH_HISTORY_KEY = 'moontv_search_history';
@@ -64,8 +83,11 @@ export function generateStorageKey(source: string, id: string): string {
  */
 export async function getAllPlayRecords(): Promise<Record<string, PlayRecord>> {
   // 若配置标明使用数据库，则从后端 API 拉取
-  if (STORAGE_TYPE === 'database') {
-    return fetchFromApi<Record<string, PlayRecord>>('/api/playrecords');
+  if (STORAGE_TYPE !== 'localstorage') {
+    const user = getUsername();
+    return fetchFromApi<Record<string, PlayRecord>>(
+      `/api/playrecords?user=${encodeURIComponent(user ?? '')}`
+    );
   }
 
   // 默认 / localstorage 流程
@@ -96,14 +118,15 @@ export async function savePlayRecord(
   const fullRecord: PlayRecord = { ...record, user_id: 0 };
 
   // 若配置标明使用数据库，则通过 API 保存
-  if (STORAGE_TYPE === 'database') {
+  if (STORAGE_TYPE !== 'localstorage') {
     try {
+      const user = getUsername();
       const res = await fetch('/api/playrecords', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ key, record: fullRecord }),
+        body: JSON.stringify({ user, key, record: fullRecord }),
       });
       if (!res.ok) throw new Error(`保存播放记录失败: ${res.status}`);
     } catch (err) {
@@ -139,10 +162,12 @@ export async function deletePlayRecord(
   const key = generateStorageKey(source, id);
 
   // 若配置标明使用数据库，则通过 API 删除
-  if (STORAGE_TYPE === 'database') {
+  if (STORAGE_TYPE !== 'localstorage') {
     try {
       const res = await fetch(
-        `/api/playrecords?key=${encodeURIComponent(key)}`,
+        `/api/playrecords?key=${encodeURIComponent(
+          key
+        )}&user=${encodeURIComponent(getUsername() ?? '')}`,
         {
           method: 'DELETE',
         }
@@ -179,7 +204,7 @@ export async function deletePlayRecord(
  */
 export async function getSearchHistory(): Promise<string[]> {
   // 如果配置为使用数据库，则从后端 API 获取
-  if (STORAGE_TYPE === 'database') {
+  if (STORAGE_TYPE !== 'localstorage') {
     try {
       return fetchFromApi<string[]>('/api/searchhistory');
     } catch (err) {
@@ -213,7 +238,7 @@ export async function addSearchHistory(keyword: string): Promise<void> {
   if (!trimmed) return;
 
   // 数据库模式
-  if (STORAGE_TYPE === 'database') {
+  if (STORAGE_TYPE !== 'localstorage') {
     try {
       await fetch('/api/searchhistory', {
         method: 'POST',
@@ -249,7 +274,7 @@ export async function addSearchHistory(keyword: string): Promise<void> {
  */
 export async function clearSearchHistory(): Promise<void> {
   // 数据库模式
-  if (STORAGE_TYPE === 'database') {
+  if (STORAGE_TYPE !== 'localstorage') {
     try {
       await fetch('/api/searchhistory', {
         method: 'DELETE',
@@ -273,7 +298,7 @@ export async function deleteSearchHistory(keyword: string): Promise<void> {
   if (!trimmed) return;
 
   // 数据库模式
-  if (STORAGE_TYPE === 'database') {
+  if (STORAGE_TYPE !== 'localstorage') {
     try {
       await fetch(`/api/searchhistory?keyword=${encodeURIComponent(trimmed)}`, {
         method: 'DELETE',
@@ -317,8 +342,11 @@ const FAVORITES_KEY = 'moontv_favorites';
  */
 export async function getAllFavorites(): Promise<Record<string, Favorite>> {
   // 数据库模式
-  if (STORAGE_TYPE === 'database') {
-    return fetchFromApi<Record<string, Favorite>>('/api/favorites');
+  if (STORAGE_TYPE !== 'localstorage') {
+    const user = getUsername();
+    return fetchFromApi<Record<string, Favorite>>(
+      `/api/favorites?user=${encodeURIComponent(user ?? '')}`
+    );
   }
 
   // localStorage 模式
@@ -348,14 +376,15 @@ export async function saveFavorite(
   const fullFavorite: Favorite = { ...favorite, user_id: 0 };
 
   // 数据库模式
-  if (STORAGE_TYPE === 'database') {
+  if (STORAGE_TYPE !== 'localstorage') {
     try {
+      const user = getUsername();
       const res = await fetch('/api/favorites', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ key, favorite: fullFavorite }),
+        body: JSON.stringify({ user, key, favorite: fullFavorite }),
       });
       if (!res.ok) throw new Error(`保存收藏失败: ${res.status}`);
     } catch (err) {
@@ -391,11 +420,17 @@ export async function deleteFavorite(
   const key = generateStorageKey(source, id);
 
   // 数据库模式
-  if (STORAGE_TYPE === 'database') {
+  if (STORAGE_TYPE !== 'localstorage') {
     try {
-      const res = await fetch(`/api/favorites?key=${encodeURIComponent(key)}`, {
-        method: 'DELETE',
-      });
+      const user = getUsername();
+      const res = await fetch(
+        `/api/favorites?key=${encodeURIComponent(
+          key
+        )}&user=${encodeURIComponent(user ?? '')}`,
+        {
+          method: 'DELETE',
+        }
+      );
       if (!res.ok) throw new Error(`删除收藏失败: ${res.status}`);
     } catch (err) {
       console.error('删除收藏到数据库失败:', err);
@@ -430,9 +465,14 @@ export async function isFavorited(
   const key = generateStorageKey(source, id);
 
   // 数据库模式
-  if (STORAGE_TYPE === 'database') {
+  if (STORAGE_TYPE !== 'localstorage') {
     try {
-      const res = await fetch(`/api/favorites?key=${encodeURIComponent(key)}`);
+      const user = getUsername();
+      const res = await fetch(
+        `/api/favorites?key=${encodeURIComponent(
+          key
+        )}&user=${encodeURIComponent(user ?? '')}`
+      );
       if (!res.ok) return false;
       const data = await res.json();
       return !!data;
@@ -476,10 +516,12 @@ export async function toggleFavorite(
  */
 export async function clearAllPlayRecords(): Promise<void> {
   // 数据库模式
-  if (STORAGE_TYPE === 'database') {
+  if (STORAGE_TYPE !== 'localstorage') {
+    const user = getUsername();
     try {
-      await fetch('/api/playrecords', {
+      await fetch(`/api/playrecords?user=${encodeURIComponent(user ?? '')}`, {
         method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
       });
     } catch (err) {
       console.error('清空播放记录失败:', err);
@@ -497,10 +539,12 @@ export async function clearAllPlayRecords(): Promise<void> {
  */
 export async function clearAllFavorites(): Promise<void> {
   // 数据库模式
-  if (STORAGE_TYPE === 'database') {
+  if (STORAGE_TYPE !== 'localstorage') {
+    const user = getUsername();
     try {
-      await fetch('/api/favorites', {
+      await fetch(`/api/favorites?user=${encodeURIComponent(user ?? '')}`, {
         method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
       });
     } catch (err) {
       console.error('清空收藏失败:', err);

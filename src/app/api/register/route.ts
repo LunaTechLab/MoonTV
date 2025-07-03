@@ -12,29 +12,19 @@ const STORAGE_TYPE =
 
 export async function POST(req: NextRequest) {
   try {
-    // 本地 / localStorage 模式——仅校验固定密码
+    // localstorage 模式下不支持注册
     if (STORAGE_TYPE === 'localstorage') {
-      const envPassword = process.env.PASSWORD;
-
-      // 未配置 PASSWORD 时直接放行
-      if (!envPassword) return NextResponse.json({ ok: true });
-
-      const { password } = await req.json();
-      if (typeof password !== 'string') {
-        return NextResponse.json({ error: '密码不能为空' }, { status: 400 });
-      }
-
-      if (password !== envPassword) {
-        return NextResponse.json(
-          { ok: false, error: '密码错误' },
-          { status: 401 }
-        );
-      }
-
-      return NextResponse.json({ ok: true });
+      return NextResponse.json(
+        { error: '当前模式不支持注册' },
+        { status: 400 }
+      );
     }
 
-    // 数据库 / redis 模式——校验用户名并尝试连接数据库
+    // 校验是否开放注册
+    if (process.env.NEXT_PUBLIC_ENABLE_REGISTER !== 'true') {
+      return NextResponse.json({ error: '当前未开放注册' }, { status: 400 });
+    }
+
     const { username, password } = await req.json();
 
     if (!username || typeof username !== 'string') {
@@ -44,23 +34,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '密码不能为空' }, { status: 400 });
     }
 
-    // 校验用户密码
     try {
-      const pass = await db.verifyUser(username, password);
-      if (!pass) {
-        return NextResponse.json(
-          { error: '用户名或密码错误' },
-          { status: 401 }
-        );
+      // 检查用户是否已存在
+      const exist = await db.checkUserExist(username);
+      if (exist) {
+        return NextResponse.json({ error: '用户已存在' }, { status: 400 });
       }
 
+      await db.registerUser(username, password);
       return NextResponse.json({ ok: true });
     } catch (err) {
-      console.error('数据库验证失败', err);
+      console.error('数据库注册失败', err);
       return NextResponse.json({ error: '数据库错误' }, { status: 500 });
     }
   } catch (error) {
-    console.error('登录接口异常', error);
+    console.error('注册接口异常', error);
     return NextResponse.json({ error: '服务器错误' }, { status: 500 });
   }
 }

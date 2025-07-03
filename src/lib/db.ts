@@ -1,10 +1,10 @@
-/* eslint-disable no-console */
+/* eslint-disable no-console, @typescript-eslint/no-explicit-any */
 
 // storage type 常量: 'localstorage' | 'database'，默认 'localstorage'
 const STORAGE_TYPE =
   (process.env.NEXT_PUBLIC_STORAGE_TYPE as
     | 'localstorage'
-    | 'database'
+    | 'redis'
     | undefined) || 'localstorage';
 
 // 播放记录数据结构
@@ -30,71 +30,189 @@ export interface Favorite {
   save_time: number; // 记录保存时间（时间戳）
 }
 
+// 搜索历史最大条数
+const SEARCH_HISTORY_LIMIT = 20;
+
 // 存储接口
 export interface IStorage {
   // 播放记录相关
-  getPlayRecord(key: string): Promise<PlayRecord | null>;
-  setPlayRecord(key: string, record: PlayRecord): Promise<void>;
-  getAllPlayRecords(): Promise<{ [key: string]: PlayRecord }>;
-  deletePlayRecord(key: string): Promise<void>;
+  getPlayRecord(userName: string, key: string): Promise<PlayRecord | null>;
+  setPlayRecord(
+    userName: string,
+    key: string,
+    record: PlayRecord
+  ): Promise<void>;
+  getAllPlayRecords(userName: string): Promise<{ [key: string]: PlayRecord }>;
+  deletePlayRecord(userName: string, key: string): Promise<void>;
 
   // 收藏相关
-  getFavorite(key: string): Promise<Favorite | null>;
-  setFavorite(key: string, favorite: Favorite): Promise<void>;
-  getAllFavorites(): Promise<{ [key: string]: Favorite }>;
-  deleteFavorite(key: string): Promise<void>;
+  getFavorite(userName: string, key: string): Promise<Favorite | null>;
+  setFavorite(userName: string, key: string, favorite: Favorite): Promise<void>;
+  getAllFavorites(userName: string): Promise<{ [key: string]: Favorite }>;
+  deleteFavorite(userName: string, key: string): Promise<void>;
+
+  // 用户相关
+  registerUser(userName: string, password: string): Promise<void>;
+  verifyUser(userName: string, password: string): Promise<boolean>;
+  // 检查用户是否存在（无需密码）
+  checkUserExist(userName: string): Promise<boolean>;
+
+  // 搜索历史相关
+  getSearchHistory(): Promise<string[]>;
+  addSearchHistory(keyword: string): Promise<void>;
+  deleteSearchHistory(keyword?: string): Promise<void>;
 }
 
-// 数据库实现（保留接口，待实现）
-class DatabaseStorage implements IStorage {
-  async getPlayRecord(_key: string): Promise<PlayRecord | null> {
-    // TODO: 实现数据库查询逻辑
-    throw new Error('Database storage not implemented yet');
+// ---------------- Redis 实现 ----------------
+import { createClient, RedisClientType } from 'redis';
+
+class RedisStorage implements IStorage {
+  private client: RedisClientType;
+
+  constructor() {
+    this.client = getRedisClient();
   }
 
-  async setPlayRecord(_key: string, _record: PlayRecord): Promise<void> {
-    // TODO: 实现数据库插入/更新逻辑
-    throw new Error('Database storage not implemented yet');
+  // ---------- 播放记录 ----------
+  private prKey(user: string, key: string) {
+    return `u:${user}:pr:${key}`; // u:username:pr:source+id
   }
 
-  async getAllPlayRecords(): Promise<{ [key: string]: PlayRecord }> {
-    // TODO: 实现数据库查询所有记录逻辑
-    throw new Error('Database storage not implemented yet');
+  async getPlayRecord(
+    userName: string,
+    key: string
+  ): Promise<PlayRecord | null> {
+    const val = await this.client.get(this.prKey(userName, key));
+    return val ? (JSON.parse(val) as PlayRecord) : null;
   }
 
-  async deletePlayRecord(_key: string): Promise<void> {
-    // TODO: 实现数据库删除逻辑
-    throw new Error('Database storage not implemented yet');
+  async setPlayRecord(
+    userName: string,
+    key: string,
+    record: PlayRecord
+  ): Promise<void> {
+    await this.client.set(this.prKey(userName, key), JSON.stringify(record));
   }
 
-  async getFavorite(_: string): Promise<Favorite | null> {
-    // TODO: 实现数据库查询逻辑
-    throw new Error('Database storage not implemented yet');
+  async getAllPlayRecords(
+    userName: string
+  ): Promise<Record<string, PlayRecord>> {
+    const pattern = `u:${userName}:pr:*`;
+    const keys: string[] = await this.client.keys(pattern);
+    if (keys.length === 0) return {};
+    const values = await this.client.mGet(keys);
+    const result: Record<string, PlayRecord> = {};
+    keys.forEach((fullKey: string, idx: number) => {
+      const raw = values[idx];
+      if (raw) {
+        const rec = JSON.parse(raw) as PlayRecord;
+        // 截取 source+id 部分
+        const keyPart = fullKey.replace(`u:${userName}:pr:`, '');
+        result[keyPart] = rec;
+      }
+    });
+    return result;
   }
 
-  async setFavorite(_key: string, _favorite: Favorite): Promise<void> {
-    // TODO: 实现数据库插入/更新逻辑
-    throw new Error('Database storage not implemented yet');
+  async deletePlayRecord(userName: string, key: string): Promise<void> {
+    await this.client.del(this.prKey(userName, key));
   }
 
-  async getAllFavorites(): Promise<{ [key: string]: Favorite }> {
-    // TODO: 实现数据库查询所有收藏逻辑
-    throw new Error('Database storage not implemented yet');
+  // ---------- 收藏 ----------
+  private favKey(user: string, key: string) {
+    return `u:${user}:fav:${key}`;
   }
 
-  async deleteFavorite(_key: string): Promise<void> {
-    // TODO: 实现数据库删除逻辑
-    throw new Error('Database storage not implemented yet');
+  async getFavorite(userName: string, key: string): Promise<Favorite | null> {
+    const val = await this.client.get(this.favKey(userName, key));
+    return val ? (JSON.parse(val) as Favorite) : null;
+  }
+
+  async setFavorite(
+    userName: string,
+    key: string,
+    favorite: Favorite
+  ): Promise<void> {
+    await this.client.set(this.favKey(userName, key), JSON.stringify(favorite));
+  }
+
+  async getAllFavorites(userName: string): Promise<Record<string, Favorite>> {
+    const pattern = `u:${userName}:fav:*`;
+    const keys: string[] = await this.client.keys(pattern);
+    if (keys.length === 0) return {};
+    const values = await this.client.mGet(keys);
+    const result: Record<string, Favorite> = {};
+    keys.forEach((fullKey: string, idx: number) => {
+      const raw = values[idx];
+      if (raw) {
+        const fav = JSON.parse(raw) as Favorite;
+        const keyPart = fullKey.replace(`u:${userName}:fav:`, '');
+        result[keyPart] = fav;
+      }
+    });
+    return result;
+  }
+
+  async deleteFavorite(userName: string, key: string): Promise<void> {
+    await this.client.del(this.favKey(userName, key));
+  }
+
+  // ---------- 用户注册 / 登录 ----------
+  private userPwdKey(user: string) {
+    return `u:${user}:pwd`;
+  }
+
+  async registerUser(userName: string, password: string): Promise<void> {
+    // 简单存储明文密码，生产环境应加密
+    await this.client.set(this.userPwdKey(userName), password);
+  }
+
+  async verifyUser(userName: string, password: string): Promise<boolean> {
+    const stored = await this.client.get(this.userPwdKey(userName));
+    if (stored === null) return false;
+    return stored === password;
+  }
+
+  // 检查用户是否存在
+  async checkUserExist(userName: string): Promise<boolean> {
+    // 使用 EXISTS 判断 key 是否存在
+    const exists = await this.client.exists(this.userPwdKey(userName));
+    return exists === 1;
+  }
+
+  // ---------- 搜索历史 ----------
+  private shKey = 'moontv:search_history';
+
+  async getSearchHistory(): Promise<string[]> {
+    return (await this.client.lRange(this.shKey, 0, -1)) as string[];
+  }
+
+  async addSearchHistory(keyword: string): Promise<void> {
+    // 先去重
+    await this.client.lRem(this.shKey, 0, keyword);
+    // 插入到最前
+    await this.client.lPush(this.shKey, keyword);
+    // 限制最大长度
+    await this.client.lTrim(this.shKey, 0, SEARCH_HISTORY_LIMIT - 1);
+  }
+
+  async deleteSearchHistory(keyword?: string): Promise<void> {
+    if (keyword) {
+      await this.client.lRem(this.shKey, 0, keyword);
+    } else {
+      await this.client.del(this.shKey);
+    }
   }
 }
 
 // 创建存储实例
 function createStorage(): IStorage {
   switch (STORAGE_TYPE) {
-    case 'database':
-      return new DatabaseStorage();
+    case 'redis':
+      return new RedisStorage();
     case 'localstorage':
     default:
+      // 默认返回内存实现，保证本地开发可用
       return null as unknown as IStorage;
   }
 }
@@ -123,80 +241,157 @@ export class DbManager {
   }
 
   // 播放记录相关方法
-  async getPlayRecord(source: string, id: string): Promise<PlayRecord | null> {
+  async getPlayRecord(
+    userName: string,
+    source: string,
+    id: string
+  ): Promise<PlayRecord | null> {
     const key = generateStorageKey(source, id);
-    return this.storage.getPlayRecord(key);
+    return this.storage.getPlayRecord(userName, key);
   }
 
   async savePlayRecord(
+    userName: string,
     source: string,
     id: string,
     record: Omit<PlayRecord, 'user_id'>
   ): Promise<void> {
     const key = generateStorageKey(source, id);
     const fullRecord: PlayRecord = { ...record, user_id: 0 };
-    await this.storage.setPlayRecord(key, fullRecord);
+    await this.storage.setPlayRecord(userName, key, fullRecord);
   }
 
-  async getAllPlayRecords(): Promise<{ [key: string]: PlayRecord }> {
-    return this.storage.getAllPlayRecords();
+  async getAllPlayRecords(userName: string): Promise<{
+    [key: string]: PlayRecord;
+  }> {
+    return this.storage.getAllPlayRecords(userName);
   }
 
-  async deletePlayRecord(source: string, id: string): Promise<void> {
+  async deletePlayRecord(
+    userName: string,
+    source: string,
+    id: string
+  ): Promise<void> {
     const key = generateStorageKey(source, id);
-    await this.storage.deletePlayRecord(key);
+    await this.storage.deletePlayRecord(userName, key);
   }
 
   // 收藏相关方法
-  async getFavorite(source: string, id: string): Promise<Favorite | null> {
+  async getFavorite(
+    userName: string,
+    source: string,
+    id: string
+  ): Promise<Favorite | null> {
     const key = generateStorageKey(source, id);
-    return this.storage.getFavorite(key);
+    return this.storage.getFavorite(userName, key);
   }
 
   async saveFavorite(
+    userName: string,
     source: string,
     id: string,
     favorite: Omit<Favorite, 'user_id'>
   ): Promise<void> {
     const key = generateStorageKey(source, id);
     const fullFavorite: Favorite = { ...favorite, user_id: 0 };
-    await this.storage.setFavorite(key, fullFavorite);
+    await this.storage.setFavorite(userName, key, fullFavorite);
   }
 
-  async getAllFavorites(): Promise<{ [key: string]: Favorite }> {
-    return this.storage.getAllFavorites();
+  async getAllFavorites(
+    userName: string
+  ): Promise<{ [key: string]: Favorite }> {
+    return this.storage.getAllFavorites(userName);
   }
 
-  async deleteFavorite(source: string, id: string): Promise<void> {
+  async deleteFavorite(
+    userName: string,
+    source: string,
+    id: string
+  ): Promise<void> {
     const key = generateStorageKey(source, id);
-    await this.storage.deleteFavorite(key);
+    await this.storage.deleteFavorite(userName, key);
   }
 
-  async isFavorited(source: string, id: string): Promise<boolean> {
-    const favorite = await this.getFavorite(source, id);
+  async isFavorited(
+    userName: string,
+    source: string,
+    id: string
+  ): Promise<boolean> {
+    const favorite = await this.getFavorite(userName, source, id);
     return favorite !== null;
   }
 
   async toggleFavorite(
+    userName: string,
     source: string,
     id: string,
     favoriteData?: Omit<Favorite, 'user_id'>
   ): Promise<boolean> {
-    const isFav = await this.isFavorited(source, id);
+    const isFav = await this.isFavorited(userName, source, id);
 
     if (isFav) {
-      await this.deleteFavorite(source, id);
+      await this.deleteFavorite(userName, source, id);
       return false;
-    } else {
-      if (favoriteData) {
-        await this.saveFavorite(source, id, favoriteData);
-        return true;
-      } else {
-        throw new Error('Favorite data is required when adding to favorites');
-      }
     }
+
+    if (favoriteData) {
+      await this.saveFavorite(userName, source, id, favoriteData);
+      return true;
+    }
+
+    throw new Error('Favorite data is required when adding to favorites');
+  }
+
+  // ---------- 用户相关 ----------
+  async registerUser(userName: string, password: string): Promise<void> {
+    await this.storage.registerUser(userName, password);
+  }
+
+  async verifyUser(userName: string, password: string): Promise<boolean> {
+    return this.storage.verifyUser(userName, password);
+  }
+
+  // 检查用户是否已存在
+  async checkUserExist(userName: string): Promise<boolean> {
+    return this.storage.checkUserExist(userName);
+  }
+
+  // ---------- 搜索历史 ----------
+  async getSearchHistory(): Promise<string[]> {
+    return this.storage.getSearchHistory();
+  }
+
+  async addSearchHistory(keyword: string): Promise<void> {
+    await this.storage.addSearchHistory(keyword);
+  }
+
+  async deleteSearchHistory(keyword?: string): Promise<void> {
+    await this.storage.deleteSearchHistory(keyword);
   }
 }
 
 // 导出默认实例
 export const db = new DbManager();
+
+// 单例 Redis 客户端
+function getRedisClient(): RedisClientType {
+  const globalKey = Symbol.for('__MOONTV_REDIS_CLIENT__');
+  let client: RedisClientType | undefined = (global as any)[globalKey];
+
+  if (!client) {
+    const url = process.env.REDIS_URL;
+    if (!url) {
+      throw new Error('REDIS_URL env variable not set');
+    }
+    client = createClient({ url });
+
+    // 提前连接，连接失败抛出错误便于定位
+    client.connect().catch((err: unknown) => {
+      console.error('Redis connection error:', err);
+    });
+
+    (global as any)[globalKey] = client;
+  }
+
+  return client;
+}

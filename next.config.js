@@ -52,6 +52,13 @@ const nextConfig = {
     // Modify the file loader rule to ignore *.svg, since we have it handled now.
     fileLoaderRule.exclude = /\.svg$/i;
 
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      net: false,
+      tls: false,
+      crypto: false,
+    };
+
     return config;
   },
 };
