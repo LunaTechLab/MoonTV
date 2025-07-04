@@ -6,6 +6,8 @@ import React, { useEffect, useState } from 'react';
 
 import { deletePlayRecord, isFavorited, toggleFavorite } from '@/lib/db.client';
 
+import { ImagePlaceholder } from '@/components/ImagePlaceholder';
+
 interface VideoCardProps {
   id: string;
   source: string;
@@ -89,6 +91,7 @@ export default function VideoCard({
 }: VideoCardProps) {
   const [playHover, setPlayHover] = useState(false);
   const [favorited, setFavorited] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
 
@@ -110,12 +113,6 @@ export default function VideoCard({
   ) => {
     e.preventDefault();
     e.stopPropagation();
-
-    // 如果是从收藏夹移除，立即更新UI
-    if (favorited && from === 'favorites') {
-      setIsDeleting(true);
-      onDelete?.();
-    }
 
     try {
       const newState = await toggleFavorite(source, id, {
@@ -152,12 +149,12 @@ export default function VideoCard({
   };
 
   const hideCheckCircle = from === 'favorites' || from === 'search';
-  const alwaysShowHeart = from === 'favorites';
+  const alwaysShowHeart = from !== 'favorites';
 
   return (
     <Link
       href={`/detail?source=${source}&id=${id}&title=${encodeURIComponent(
-        title
+        title.trim()
       )}${year ? `&year=${year}` : ''}${from ? `&from=${from}` : ''}`}
     >
       <div
@@ -167,15 +164,23 @@ export default function VideoCard({
       >
         {/* 海报图片容器 */}
         <div className='relative aspect-[2/3] w-full overflow-hidden rounded-md group-hover:scale-[1.02] transition-all duration-400 cubic-bezier(0.4,0,0.2,1)'>
+          {/* 图片占位符 - 骨架屏效果 */}
+          <ImagePlaceholder aspectRatio='aspect-[2/3]' />
+
           <Image
             src={poster}
             alt={title}
             fill
-            className='object-cover transition-transform duration-500 cubic-bezier(0.4,0,0.2,1) group-hover:scale-110'
+            className={`object-cover transition-transform duration-500 cubic-bezier(0.4,0,0.2,1) group-hover:scale-110
+                      ${
+                        isLoaded
+                          ? 'opacity-100 scale-100'
+                          : 'opacity-0 scale-95'
+                      }`}
+            onLoadingComplete={() => setIsLoaded(true)}
             referrerPolicy='no-referrer'
             priority={false}
           />
-
           {/* Hover 效果层 */}
           <div
             className={`absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent ${
@@ -236,20 +241,26 @@ export default function VideoCard({
               </span>
             </div>
           </div>
-
-          {/* 集数矩形展示框 - 增加条件判断：仅当有多个集数且已播放时显示 */}
+          {/* 继续观看 - 集数矩形展示框 */}
           {episodes && episodes > 1 && currentEpisode && (
             <div className='absolute top-2 right-2 min-w-[1.875rem] h-5 sm:h-7 sm:min-w-[2.5rem] bg-green-500/90 dark:bg-green-600/90 rounded-md flex items-center justify-center px-2 shadow-md text-[0.55rem] sm:text-xs'>
               <span className='text-white font-bold leading-none'>
                 {currentEpisode}
+                <span className='mx-1 text-white/80'>/</span>
               </span>
-              <span className='mx-1 text-white/80'>/</span>
               <span className='text-white font-bold leading-none'>
                 {episodes}
               </span>
             </div>
           )}
-
+          {/* 搜索非聚合 - 集数圆形展示框 */}
+          {episodes && episodes > 1 && !currentEpisode && (
+            <div className='absolute top-2 right-2 w-4 h-4 sm:w-7 sm:h-7 rounded-full bg-green-500/90 dark:bg-green-600/90 flex items-center justify-center shadow-md text-[0.55rem] sm:text-xs'>
+              <span className='text-white font-bold leading-none'>
+                {episodes}
+              </span>
+            </div>
+          )}
           {/* 豆瓣链接按钮 */}
           {douban_id && from === 'search' && (
             <a

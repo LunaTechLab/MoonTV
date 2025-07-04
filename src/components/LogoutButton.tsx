@@ -3,7 +3,6 @@
 'use client';
 
 import { LogOut } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 
 /**
  * 退出登录按钮
@@ -13,15 +12,13 @@ import { useRouter } from 'next/navigation';
  * 2. 跳转到 /login 页面
  */
 export function LogoutButton() {
-  const router = useRouter();
-
   const handleLogout = () => {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('username');
       localStorage.removeItem('password');
     }
     // 使用 replace，避免用户返回上一页时仍然处于已登录状态
-    router.replace('/login');
+    window.location.reload();
   };
 
   return (

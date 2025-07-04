@@ -2,21 +2,22 @@
 
 'use client';
 
-import { LinkIcon } from 'lucide-react';
+import { Heart, LinkIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 
+import { isFavorited, toggleFavorite } from '@/lib/db.client';
 import { SearchResult } from '@/lib/types';
 
 import PageLayout from '@/components/PageLayout';
 
 function AggregatePageClient() {
   const searchParams = useSearchParams();
-  const query = searchParams.get('q')?.trim() || '';
-  const title = searchParams.get('title')?.trim() || '';
-  const year = searchParams.get('year')?.trim() || '';
-  const type = searchParams.get('type')?.trim() || '';
+  const query = searchParams.get('q') || '';
+  const title = searchParams.get('title') || '';
+  const year = searchParams.get('year') || '';
+  const type = searchParams.get('type') || '';
 
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +33,9 @@ function AggregatePageClient() {
 
     const fetchData = async () => {
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const res = await fetch(
+          `/api/search?q=${encodeURIComponent(query.trim())}`
+        );
         if (!res.ok) {
           throw new Error('搜索失败');
         }
@@ -78,7 +81,7 @@ function AggregatePageClient() {
           setResults(Array.from(map.values()).flat());
         } else if (map.size > 1) {
           // 存在多个匹配，跳转到搜索页
-          router.push(`/search?q=${encodeURIComponent(query)}`);
+          router.push(`/search?q=${encodeURIComponent(query.trim())}`);
         }
       } catch (e) {
         setError(e instanceof Error ? e.message : '搜索失败');
@@ -141,6 +144,88 @@ function AggregatePageClient() {
 
   // 详情映射，便于快速获取每个源的集数
   const sourceDetailMap = new Map(results.map((d) => [d.source, d]));
+
+  // 新增：播放源卡片组件，包含收藏逻辑
+  const SourceCard = ({ src }: { src: SearchResult }) => {
+    const d = sourceDetailMap.get(src.source);
+    const epCount = d ? d.episodes.length : src.episodes.length;
+
+    const [favorited, setFavorited] = useState(false);
+
+    // 初次加载检查收藏状态
+    useEffect(() => {
+      (async () => {
+        try {
+          const fav = await isFavorited(src.source, src.id);
+          setFavorited(fav);
+        } catch {
+          /* 忽略错误 */
+        }
+      })();
+    }, [src.source, src.id]);
+
+    // 切换收藏状态
+    const handleToggleFavorite = async (
+      e: React.MouseEvent<HTMLSpanElement | SVGElement, MouseEvent>
+    ) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      try {
+        const newState = await toggleFavorite(src.source, src.id, {
+          title: src.title,
+          source_name: src.source_name,
+          year: src.year,
+          cover: src.poster,
+          total_episodes: src.episodes.length,
+          save_time: Date.now(),
+        });
+        setFavorited(newState);
+      } catch {
+        /* 忽略错误 */
+      }
+    };
+
+    return (
+      <a
+        key={src.source}
+        href={`/play?source=${src.source}&id=${
+          src.id
+        }&title=${encodeURIComponent(src.title.trim())}${
+          src.year ? `&year=${src.year}` : ''
+        }&from=aggregate`}
+        className='group relative flex items-center justify-center w-full h-14 bg-gray-500/80 hover:bg-green-500 dark:bg-gray-700/80 dark:hover:bg-green-600 rounded-lg transition-colors'
+      >
+        {/* 收藏爱心 */}
+        <span
+          onClick={handleToggleFavorite}
+          title={favorited ? '移除收藏' : '加入收藏'}
+          className={`absolute top-[2px] left-1 inline-flex items-center justify-center cursor-pointer transition-opacity duration-200 ${
+            favorited ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          }`}
+        >
+          <Heart
+            className={`w-5 h-5 ${
+              favorited ? 'text-red-500' : 'text-white/90'
+            }`}
+            strokeWidth={2}
+            fill={favorited ? 'currentColor' : 'none'}
+          />
+        </span>
+
+        {/* 名称 */}
+        <span className='px-1 text-white text-sm font-medium truncate whitespace-nowrap'>
+          {src.source_name}
+        </span>
+        {/* 集数徽标 */}
+        {epCount && epCount > 1 ? (
+          <span className='absolute top-[2px] right-1 text-[10px] font-semibold text-green-900 bg-green-300/90 rounded-full px-1 pointer-events-none'>
+            {epCount}集
+          </span>
+        ) : null}
+      </a>
+    );
+  };
 
   return (
     <PageLayout activePath='/aggregate'>
@@ -247,32 +332,9 @@ function AggregatePageClient() {
                   </div>
                 </div>
                 <div className='grid grid-cols-3 gap-2 sm:grid-cols-[repeat(auto-fill,_minmax(6rem,_1fr))] sm:gap-4 justify-start'>
-                  {uniqueSources.map((src) => {
-                    const d = sourceDetailMap.get(src.source);
-                    const epCount = d ? d.episodes.length : src.episodes.length;
-                    return (
-                      <a
-                        key={src.source}
-                        href={`/play?source=${src.source}&id=${
-                          src.id
-                        }&title=${encodeURIComponent(src.title)}${
-                          src.year ? `&year=${src.year}` : ''
-                        }&from=aggregate`}
-                        className='relative flex items-center justify-center w-full h-14 bg-gray-500/80 hover:bg-green-500 dark:bg-gray-700/80 dark:hover:bg-green-600 rounded-lg transition-colors'
-                      >
-                        {/* 名称 */}
-                        <span className='px-1 text-white text-sm font-medium truncate whitespace-nowrap'>
-                          {src.source_name}
-                        </span>
-                        {/* 集数徽标 */}
-                        {epCount && epCount > 1 ? (
-                          <span className='absolute top-[2px] right-1 text-[10px] font-semibold text-green-900 bg-green-300/90 rounded-full px-1 pointer-events-none'>
-                            {epCount}集
-                          </span>
-                        ) : null}
-                      </a>
-                    );
-                  })}
+                  {uniqueSources.map((src) => (
+                    <SourceCard key={src.source} src={src} />
+                  ))}
                 </div>
               </div>
             )}

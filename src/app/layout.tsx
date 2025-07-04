@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
+import '../lib/cron';
 
 import './globals.css';
 
@@ -35,10 +36,7 @@ export default function RootLayout({
 
   // 将运行时配置注入到全局 window 对象，供客户端在运行时读取
   const runtimeConfig = {
-    STORAGE_TYPE:
-      process.env.STORAGE_TYPE ||
-      process.env.NEXT_PUBLIC_STORAGE_TYPE ||
-      'localstorage',
+    STORAGE_TYPE: process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage',
     ENABLE_REGISTER: process.env.NEXT_PUBLIC_ENABLE_REGISTER === 'true',
   };
 

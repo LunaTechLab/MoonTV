@@ -102,50 +102,14 @@ docker run -d --name moontv -p 3000:3000 ghcr.io/senshinya/moontv:latest
 
 访问 `http://服务器 IP:3000` 即可。
 
-#### 2. docker-compose 示例
 
-```yaml
-version: '3.9'
-services:
-  moontv:
-    image: ghcr.io/senshinya/moontv:latest
-    container_name: moontv
-    restart: unless-stopped
-    ports:
-      - '3000:3000'
-    environment:
-      - PASSWORD=your_password
-    # 如需自定义配置，可挂载文件
-    # volumes:
-    #   - ./config.json:/app/config.json:ro
-```
-
-执行：
-
-```bash
-docker compose up -d
-```
-
-随后同样访问 `http://服务器 IP:3000`。
-
-### **请勿使用 Pull Bot 自动同步**
-
-Pull Bot 会反复触发无效的 PR 和垃圾邮件，严重干扰项目维护。作者可能会直接拉黑所有 Pull Bot 自动发起的同步请求的仓库所有者。
-
-**推荐做法：**
-
-建议在 fork 的仓库中启用本仓库自带的 GitHub Actions 自动同步功能（见 `.github/workflows/sync.yml`）。
-
-如需手动同步主仓库更新，也可以使用 GitHub 官方的 [Sync fork](https://docs.github.com/cn/github/collaborating-with-issues-and-pull-requests/syncing-a-fork) 功能。
-
-## Compose 最佳实践
+## Docker Compose 最佳实践
 
 若你使用 docker compose 部署，以下是一些 compose 示例
 
 ### local storage 版本
 
 ```yaml
-version: '3.9'
 services:
   moontv:
     image: ghcr.io/senshinya/moontv:latest
@@ -163,9 +127,8 @@ services:
 ### Redis 版本（推荐，多账户数据隔离，跨设备同步）
 
 ```yaml
-version: '3.9'
 services:
-  moontv:
+  moontv-core:
     image: ghcr.io/senshinya/moontv:latest
     container_name: moontv
     restart: unless-stopped
@@ -173,19 +136,34 @@ services:
       - '3000:3000'
     environment:
       - NEXT_PUBLIC_STORAGE_TYPE=redis
-      - REDIS_URL=redis://redis:6379
+      - REDIS_URL=redis://moontv-redis:6379
       - NEXT_PUBLIC_ENABLE_REGISTER=true # 首次部署请设置该变量，注册初始账户后可关闭
+    networks:
+      - moontv-network
+    depends_on:
+      - moontv-redis
     # 如需自定义配置，可挂载文件
     # volumes:
     #   - ./config.json:/app/config.json:ro
-  redis:
+  moontv-redis:
     image: redis
     container_name: moontv-redis
     restart: unless-stopped
+    networks:
+      - moontv-network
     # 如需持久化
     # volumes:
     #   - ./data:/data
+networks:
+  moontv-network:
+    driver: bridge
 ```
+
+## 自动同步最近更改
+
+建议在 fork 的仓库中启用本仓库自带的 GitHub Actions 自动同步功能（见 `.github/workflows/sync.yml`）。
+
+如需手动同步主仓库更新，也可以使用 GitHub 官方的 [Sync fork](https://docs.github.com/cn/github/collaborating-with-issues-and-pull-requests/syncing-a-fork) 功能。
 
 ## 环境变量
 

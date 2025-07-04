@@ -152,3 +152,21 @@ div[data-media-provider] video {
   height: 100%;
   object-fit: contain;
 }
+
+/* Vidstack Menu 自定义样式：背景黑色，文字白色 */
+.vds-menu-items {
+  background-color: #000;
+  color: #fff;
+}
+
+.vds-radio {
+  color: #fff !important;
+}
+
+.vds-radio:hover {
+  background-color: rgba(245, 245, 245, 0.1) !important;
+}
+
+.vds-radio .vds-icon {
+  color: #fff !important;
+}

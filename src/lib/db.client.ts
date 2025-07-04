@@ -206,7 +206,10 @@ export async function getSearchHistory(): Promise<string[]> {
   // 如果配置为使用数据库，则从后端 API 获取
   if (STORAGE_TYPE !== 'localstorage') {
     try {
-      return fetchFromApi<string[]>('/api/searchhistory');
+      const user = getUsername();
+      return fetchFromApi<string[]>(
+        `/api/searchhistory?user=${encodeURIComponent(user ?? '')}`
+      );
     } catch (err) {
       console.error('获取搜索历史失败:', err);
       return [];
@@ -240,12 +243,13 @@ export async function addSearchHistory(keyword: string): Promise<void> {
   // 数据库模式
   if (STORAGE_TYPE !== 'localstorage') {
     try {
+      const user = getUsername();
       await fetch('/api/searchhistory', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ keyword: trimmed }),
+        body: JSON.stringify({ keyword: trimmed, user: user ?? '' }),
       });
     } catch (err) {
       console.error('保存搜索历史失败:', err);
@@ -276,7 +280,8 @@ export async function clearSearchHistory(): Promise<void> {
   // 数据库模式
   if (STORAGE_TYPE !== 'localstorage') {
     try {
-      await fetch('/api/searchhistory', {
+      const user = getUsername();
+      await fetch(`/api/searchhistory?user=${encodeURIComponent(user ?? '')}`, {
         method: 'DELETE',
       });
     } catch (err) {
@@ -300,9 +305,15 @@ export async function deleteSearchHistory(keyword: string): Promise<void> {
   // 数据库模式
   if (STORAGE_TYPE !== 'localstorage') {
     try {
-      await fetch(`/api/searchhistory?keyword=${encodeURIComponent(trimmed)}`, {
-        method: 'DELETE',
-      });
+      const user = getUsername();
+      await fetch(
+        `/api/searchhistory?user=${encodeURIComponent(
+          user ?? ''
+        )}&keyword=${encodeURIComponent(trimmed)}`,
+        {
+          method: 'DELETE',
+        }
+      );
     } catch (err) {
       console.error('删除搜索历史失败:', err);
     }

@@ -83,7 +83,7 @@ async function searchFromApi(
 
       return {
         id: item.vod_id,
-        title: item.vod_name,
+        title: item.vod_name.trim().replace(/\s+/g, ' '),
         poster: item.vod_pic,
         episodes,
         source: apiSite.key,
@@ -151,7 +151,7 @@ async function searchFromApi(
 
               return {
                 id: item.vod_id,
-                title: item.vod_name,
+                title: item.vod_name.trim().replace(/\s+/g, ' '),
                 poster: item.vod_pic,
                 episodes,
                 source: apiSite.key,

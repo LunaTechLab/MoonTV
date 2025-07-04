@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useMemo, useState } from 'react';
 
+import { ImagePlaceholder } from '@/components/ImagePlaceholder';
+
 // 聚合卡需要的基本字段，与搜索接口保持一致
 interface SearchResult {
   id: string;
@@ -52,7 +54,7 @@ function PlayCircleSolid({
 }
 
 /**
- * 与 `VideoCard` 基本一致，删除了集数徽标、来源标签、收藏等功能
+ * 与 `VideoCard` 基本一致，删除了来源标签、收藏等功能
  * 点击播放按钮 -> 跳到第一个源播放
  * 点击卡片其他区域 -> 跳到聚合详情页 (/aggregate)
  */
@@ -64,6 +66,7 @@ const AggregateCard: React.FC<AggregateCardProps> = ({
   // 使用列表中的第一个结果做展示 & 播放
   const first = items[0];
   const [playHover, setPlayHover] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
   const router = useRouter();
 
   // 统计 items 中出现次数最多的（非 0） douban_id，用于跳转豆瓣页面
@@ -116,7 +119,7 @@ const AggregateCard: React.FC<AggregateCardProps> = ({
   return (
     <Link
       href={`/aggregate?q=${encodeURIComponent(
-        query
+        query.trim()
       )}&title=${encodeURIComponent(first.title)}${
         year ? `&year=${encodeURIComponent(year)}` : ''
       }&type=${mostFrequentEpisodes > 1 ? 'tv' : 'movie'}`}
@@ -124,11 +127,20 @@ const AggregateCard: React.FC<AggregateCardProps> = ({
       <div className='group relative w-full rounded-lg bg-transparent flex flex-col cursor-pointer transition-all duration-300 ease-in-out'>
         {/* 封面图片 2:3 */}
         <div className='relative aspect-[2/3] w-full overflow-hidden rounded-md group-hover:scale-[1.02] transition-all duration-400 cubic-bezier(0.4,0,0.2,1)'>
+          {/* 图片占位符 - 骨架屏效果 */}
+          <ImagePlaceholder aspectRatio='aspect-[2/3]' />
+
           <Image
             src={first.poster}
             alt={first.title}
             fill
-            className='object-cover transition-transform duration-500 cubic-bezier(0.4,0,0.2,1) group-hover:scale-110'
+            className={`object-cover transition-transform duration-500 cubic-bezier(0.4,0,0.2,1) group-hover:scale-110
+                      ${
+                        isLoaded
+                          ? 'opacity-100 scale-100'
+                          : 'opacity-0 scale-95'
+                      }`}
+            onLoadingComplete={() => setIsLoaded(true)}
             referrerPolicy='no-referrer'
             priority={false}
           />
@@ -161,9 +173,9 @@ const AggregateCard: React.FC<AggregateCardProps> = ({
             </div>
           </div>
 
-          {/* 集数矩形展示框 - 不透明，无hover效果 */}
+          {/* 集数矩形展示框 */}
           {mostFrequentEpisodes && mostFrequentEpisodes > 1 && (
-            <div className='absolute top-2 right-2 min-w-[1.875rem] h-5 sm:h-7 sm:min-w-[2.5rem] bg-green-500 dark:bg-green-600 rounded-md flex items-center justify-center px-2 shadow-md text-[0.55rem] sm:text-xs'>
+            <div className='absolute top-2 right-2 w-7 h-7 sm:w-7 sm:h-7 rounded-full bg-green-500/90 dark:bg-green-600/90 flex items-center justify-center shadow-md text-[0.55rem] sm:text-xs'>
               <span className='text-white font-bold leading-none'>
                 {mostFrequentEpisodes}
               </span>

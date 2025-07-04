@@ -34,7 +34,7 @@ export async function fetchVideoDetail({
   if (fallbackTitle) {
     try {
       const searchResp = await fetch(
-        `/api/search?q=${encodeURIComponent(fallbackTitle)}`
+        `/api/search?q=${encodeURIComponent(fallbackTitle.trim())}`
       );
       if (searchResp.ok) {
         const searchData = await searchResp.json();
@@ -61,7 +61,7 @@ export async function fetchVideoDetail({
 
   return {
     id: data?.videoInfo?.id || id,
-    title: data?.videoInfo?.title || fallbackTitle,
+    title: data?.videoInfo?.title.trim() || fallbackTitle.trim(),
     poster: data?.videoInfo?.cover || '',
     episodes: data?.episodes || [],
     source: data?.videoInfo?.source || source,

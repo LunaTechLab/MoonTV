@@ -58,7 +58,7 @@ function DetailPageClient() {
         const detailData = await fetchVideoDetail({
           source,
           id,
-          fallbackTitle,
+          fallbackTitle: fallbackTitle.trim(),
           fallbackYear,
         });
         setDetail(detailData);
