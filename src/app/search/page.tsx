@@ -48,7 +48,13 @@ function SearchPageClient() {
       arr.push(item);
       map.set(key, arr);
     });
-    return map;
+    return Array.from(map.entries()).sort((a, b) => {
+      return a[1][0].year === b[1][0].year
+        ? a[0].localeCompare(b[0])
+        : a[1][0].year > b[1][0].year
+        ? -1
+        : 1;
+    });
   }, [searchResults]);
 
   useEffect(() => {
@@ -81,7 +87,15 @@ function SearchPageClient() {
         `/api/search?q=${encodeURIComponent(query.trim())}`
       );
       const data = await response.json();
-      setSearchResults(data.results);
+      setSearchResults(
+        data.results.sort((a: SearchResult, b: SearchResult) => {
+          return a.year === b.year
+            ? a.title.localeCompare(b.title)
+            : a.year > b.year
+            ? -1
+            : 1;
+        })
+      );
       setShowResults(true);
     } catch (error) {
       setSearchResults([]);
@@ -168,19 +182,17 @@ function SearchPageClient() {
                 className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8'
               >
                 {viewMode === 'agg'
-                  ? Array.from(aggregatedResults.entries()).map(
-                      ([mapKey, group]) => {
-                        return (
-                          <div key={`agg-${mapKey}`} className='w-full'>
-                            <AggregateCard
-                              items={group}
-                              query={searchQuery}
-                              year={group[0].year}
-                            />
-                          </div>
-                        );
-                      }
-                    )
+                  ? aggregatedResults.map(([mapKey, group]) => {
+                      return (
+                        <div key={`agg-${mapKey}`} className='w-full'>
+                          <AggregateCard
+                            items={group}
+                            query={searchQuery}
+                            year={group[0].year}
+                          />
+                        </div>
+                      );
+                    })
                   : searchResults.map((item) => (
                       <div
                         key={`all-${item.source}-${item.id}`}

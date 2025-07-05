@@ -1,8 +1,10 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+
 import { Heart, Link as LinkIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 import { deletePlayRecord, isFavorited, toggleFavorite } from '@/lib/db.client';
 
@@ -93,6 +95,8 @@ export default function VideoCard({
   const [favorited, setFavorited] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [parallax, setParallax] = useState({ x: 0, y: 0 });
+  const cardRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
   // 检查初始收藏状态
@@ -148,6 +152,52 @@ export default function VideoCard({
     }
   };
 
+  // 图片视差效果 - 参考 DemoCard，优化 Safari 性能
+  useEffect(() => {
+    let requestId: number | null = null;
+    let lastX = 0;
+    let lastY = 0;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!cardRef.current) return;
+
+      const rect = cardRef.current.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+
+      // 只有在移动超过阈值时才更新，减少重绘
+      if (Math.abs(x - lastX) > 5 || Math.abs(y - lastY) > 5) {
+        lastX = x;
+        lastY = y;
+
+        if (requestId) cancelAnimationFrame(requestId);
+        requestId = requestAnimationFrame(() => {
+          const xParallax = (x / rect.width - 0.5) * 10;
+          const yParallax = (y / rect.height - 0.5) * 10;
+          setParallax({ x: xParallax, y: yParallax });
+        });
+      }
+    };
+
+    const handleMouseLeave = () => {
+      if (requestId) cancelAnimationFrame(requestId);
+      setParallax({ x: 0, y: 0 });
+    };
+
+    if (cardRef.current) {
+      cardRef.current.addEventListener('mousemove', handleMouseMove);
+      cardRef.current.addEventListener('mouseleave', handleMouseLeave);
+    }
+
+    return () => {
+      if (cardRef.current) {
+        cardRef.current.removeEventListener('mousemove', handleMouseMove);
+        cardRef.current.removeEventListener('mouseleave', handleMouseLeave);
+      }
+      if (requestId) cancelAnimationFrame(requestId);
+    };
+  }, []);
+
   const hideCheckCircle = from === 'favorites' || from === 'search';
   const alwaysShowHeart = from !== 'favorites';
 
@@ -158,12 +208,13 @@ export default function VideoCard({
       )}${year ? `&year=${year}` : ''}${from ? `&from=${from}` : ''}`}
     >
       <div
-        className={`group relative w-full rounded-lg bg-transparent flex flex-col cursor-pointer transition-all duration-300 ease-in-out ${
+        ref={cardRef}
+        className={`group relative w-full rounded-lg overflow-hidden bg-transparent flex flex-col cursor-pointer transition-all duration-300 ease-in-out ${
           isDeleting ? 'opacity-0 scale-90' : ''
         }`}
       >
         {/* 海报图片容器 */}
-        <div className='relative aspect-[2/3] w-full overflow-hidden rounded-md group-hover:scale-[1.02] transition-all duration-400 cubic-bezier(0.4,0,0.2,1)'>
+        <div className='relative aspect-[2/3] w-full overflow-hidden rounded-md transition-all duration-400 cubic-bezier(0.4,0,0.2,1)'>
           {/* 图片占位符 - 骨架屏效果 */}
           <ImagePlaceholder aspectRatio='aspect-[2/3]' />
 
@@ -171,7 +222,7 @@ export default function VideoCard({
             src={poster}
             alt={title}
             fill
-            className={`object-cover transition-transform duration-500 cubic-bezier(0.4,0,0.2,1) group-hover:scale-110
+            className={`object-cover transition-all duration-700 cubic-bezier(0.34,1.56,0.64,1) group-hover:scale-[1.05]
                       ${
                         isLoaded
                           ? 'opacity-100 scale-100'
@@ -180,6 +231,13 @@ export default function VideoCard({
             onLoadingComplete={() => setIsLoaded(true)}
             referrerPolicy='no-referrer'
             priority={false}
+            style={{
+              transform: `scale(1.05) translate(${parallax.x}px, ${parallax.y}px)`,
+              transition: 'transform 0.5s cubic-bezier(0.34,1.56,0.64,1)',
+              willChange: 'transform',
+              backfaceVisibility: 'hidden',
+              perspective: '1000px',
+            }}
           />
           {/* Hover 效果层 */}
           <div
@@ -192,8 +250,8 @@ export default function VideoCard({
             {/* 播放按钮 */}
             <div className='absolute inset-0 flex items-center justify-center pointer-events-auto'>
               <div
-                className={`transition-all duration-300 cubic-bezier(0.4,0,0.2,1) ${
-                  playHover ? 'scale-100 opacity-100' : 'scale-90 opacity-70'
+                className={`transition-all duration-300 cubic-bezier(0.34,1.56,0.64,1) ${
+                  playHover ? 'scale-110 opacity-100' : 'scale-90 opacity-70'
                 }`}
                 style={{ cursor: 'pointer' }}
                 onClick={(e) => {
@@ -287,14 +345,16 @@ export default function VideoCard({
           </div>
         )}
 
-        {/* 信息层 */}
-        <span className='mt-2 px-1 block text-gray-900 font-semibold truncate w-full text-center text-xs sm:text-sm dark:text-gray-200 transition-all duration-400 cubic-bezier(0.4,0,0.2,1) group-hover:translate-y-[-2px] translate-y-1 opacity-80 group-hover:opacity-100 group-hover:text-green-600 dark:group-hover:text-green-400'>
-          {title}
+        {/* 信息层 - 与 DemoCard 对齐的动画 */}
+        <span className='mt-2 px-1 block font-semibold truncate w-full text-center text-xs sm:text-sm transition-all duration-500 cubic-bezier(0.34,1.56,0.64,1) group-hover:translate-y-[-4px] opacity-80 group-hover:opacity-100'>
+          <span className='text-gray-900 dark:text-gray-200 group-hover:text-green-600 dark:group-hover:text-green-400'>
+            {title}
+          </span>
         </span>
 
         {/* 来源信息 */}
         {source && (
-          <span className='mt-1 px-1 block text-gray-500 text-[0.5rem] sm:text-xs w-full text-center dark:text-gray-400 transition-all duration-400 cubic-bezier(0.4,0,0.2,1) group-hover:translate-y-[-2px] translate-y-1 opacity-80 group-hover:opacity-100'>
+          <span className='mt-1 px-1 block text-gray-500 text-[0.5rem] sm:text-xs w-full text-center dark:text-gray-400 transition-all duration-500 cubic-bezier(0.34,1.56,0.64,1) group-hover:translate-y-[-4px] opacity-80 group-hover:opacity-100'>
             <span className='inline-block border border-gray-500/60 rounded px-2 py-[1px] dark:border-gray-400/60'>
               {source_name}
             </span>

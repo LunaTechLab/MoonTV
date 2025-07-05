@@ -28,7 +28,6 @@ async function refreshRecordAndFavorites() {
           source,
           id,
           fallbackTitle: fallbackTitle.trim(),
-          fallbackYear: '',
         });
         detailCache.set(key, promise);
       }

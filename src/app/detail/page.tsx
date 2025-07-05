@@ -14,7 +14,10 @@ import {
   isFavorited,
   toggleFavorite,
 } from '@/lib/db.client';
-import { type VideoDetail, fetchVideoDetail } from '@/lib/fetchVideoDetail';
+import {
+  type VideoDetail,
+  fetchVideoDetail,
+} from '@/lib/fetchVideoDetail.client';
 
 import PageLayout from '@/components/PageLayout';
 

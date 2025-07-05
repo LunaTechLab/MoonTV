@@ -41,7 +41,10 @@ import {
   savePlayRecord,
   toggleFavorite,
 } from '@/lib/db.client';
-import { type VideoDetail, fetchVideoDetail } from '@/lib/fetchVideoDetail';
+import {
+  type VideoDetail,
+  fetchVideoDetail,
+} from '@/lib/fetchVideoDetail.client';
 import { SearchResult } from '@/lib/types';
 
 // 扩展 HTMLVideoElement 类型以支持 hls 属性
@@ -1436,7 +1439,6 @@ function PlayPageClient() {
           noGestures={true}
           slots={{
             googleCastButton: null,
-            pipButton: null,
             settingsMenu: null,
             captionButton: null,
             muteButton: null, // 隐藏静音按钮
