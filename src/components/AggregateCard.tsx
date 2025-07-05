@@ -1,10 +1,8 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-
 import { LinkIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { ImagePlaceholder } from '@/components/ImagePlaceholder';
 
@@ -71,55 +69,6 @@ const AggregateCard: React.FC<AggregateCardProps> = ({
   const [isLoaded, setIsLoaded] = useState(false);
   const router = useRouter();
 
-  // 视差位置偏移
-  const [parallax, setParallax] = useState({ x: 0, y: 0 });
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  // 图片视差效果
-  useEffect(() => {
-    let requestId: number | null = null;
-    let lastX = 0;
-    let lastY = 0;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!cardRef.current) return;
-
-      const rect = cardRef.current.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-
-      if (Math.abs(x - lastX) > 5 || Math.abs(y - lastY) > 5) {
-        lastX = x;
-        lastY = y;
-
-        if (requestId) cancelAnimationFrame(requestId);
-        requestId = requestAnimationFrame(() => {
-          const xParallax = (x / rect.width - 0.5) * 10;
-          const yParallax = (y / rect.height - 0.5) * 10;
-          setParallax({ x: xParallax, y: yParallax });
-        });
-      }
-    };
-
-    const handleMouseLeave = () => {
-      if (requestId) cancelAnimationFrame(requestId);
-      setParallax({ x: 0, y: 0 });
-    };
-
-    if (cardRef.current) {
-      cardRef.current.addEventListener('mousemove', handleMouseMove);
-      cardRef.current.addEventListener('mouseleave', handleMouseLeave);
-    }
-
-    return () => {
-      if (cardRef.current) {
-        cardRef.current.removeEventListener('mousemove', handleMouseMove);
-        cardRef.current.removeEventListener('mouseleave', handleMouseLeave);
-      }
-      if (requestId) cancelAnimationFrame(requestId);
-    };
-  }, []);
-
   // 统计 items 中出现次数最多的（非 0） douban_id，用于跳转豆瓣页面
   const mostFrequentDoubanId = useMemo(() => {
     const countMap = new Map<number, number>();
@@ -175,10 +124,7 @@ const AggregateCard: React.FC<AggregateCardProps> = ({
         year ? `&year=${encodeURIComponent(year)}` : ''
       }&type=${mostFrequentEpisodes > 1 ? 'tv' : 'movie'}`}
     >
-      <div
-        ref={cardRef}
-        className='group relative w-full rounded-lg overflow-hidden bg-transparent flex flex-col cursor-pointer transition-all duration-300 ease-in-out'
-      >
+      <div className='group relative w-full rounded-lg bg-transparent flex flex-col cursor-pointer transition-all duration-300 ease-in-out'>
         {/* 封面图片 2:3 */}
         <div className='relative aspect-[2/3] w-full overflow-hidden rounded-md transition-all duration-400 cubic-bezier(0.4,0,0.2,1)'>
           {/* 图片占位符 - 骨架屏效果 */}
@@ -188,7 +134,7 @@ const AggregateCard: React.FC<AggregateCardProps> = ({
             src={first.poster}
             alt={first.title}
             fill
-            className={`object-cover transition-all duration-700 cubic-bezier(0.34,1.56,0.64,1) group-hover:scale-[1.05]
+            className={`object-cover transition-transform duration-500 cubic-bezier(0.4,0,0.2,1) group-hover:scale-110
                       ${
                         isLoaded
                           ? 'opacity-100 scale-100'
@@ -197,13 +143,6 @@ const AggregateCard: React.FC<AggregateCardProps> = ({
             onLoadingComplete={() => setIsLoaded(true)}
             referrerPolicy='no-referrer'
             priority={false}
-            style={{
-              transform: `scale(1.05) translate(${parallax.x}px, ${parallax.y}px)`,
-              transition: 'transform 0.5s cubic-bezier(0.34,1.56,0.64,1)',
-              willChange: 'transform',
-              backfaceVisibility: 'hidden',
-              perspective: '1000px',
-            }}
           />
 
           {/* Hover 效果层 */}
@@ -211,8 +150,8 @@ const AggregateCard: React.FC<AggregateCardProps> = ({
             {/* 播放按钮 */}
             <div className='absolute inset-0 flex items-center justify-center pointer-events-auto'>
               <div
-                className={`transition-all duration-300 cubic-bezier(0.34,1.56,0.64,1) ${
-                  playHover ? 'scale-110 opacity-100' : 'scale-90 opacity-70'
+                className={`transition-all duration-300 cubic-bezier(0.4,0,0.2,1) ${
+                  playHover ? 'scale-100 opacity-100' : 'scale-90 opacity-70'
                 }`}
                 style={{ cursor: 'pointer' }}
                 onClick={(e) => {
@@ -260,10 +199,8 @@ const AggregateCard: React.FC<AggregateCardProps> = ({
         </div>
 
         {/* 标题 */}
-        <span className='mt-2 px-1 block font-semibold truncate w-full text-center text-xs sm:text-sm transition-all duration-500 cubic-bezier(0.34,1.56,0.64,1) group-hover:translate-y-[-4px] opacity-80 group-hover:opacity-100'>
-          <span className='text-gray-900 dark:text-gray-200 group-hover:text-green-600 dark:group-hover:text-green-400'>
-            {first.title}
-          </span>
+        <span className='mt-2 px-1 block text-gray-900 font-semibold truncate w-full text-center text-xs sm:text-sm dark:text-gray-200 transition-all duration-400 cubic-bezier(0.4,0,0.2,1) group-hover:translate-y-[-2px] translate-y-1 opacity-80 group-hover:opacity-100 group-hover:text-green-600 dark:group-hover:text-green-400'>
+          {first.title}
         </span>
       </div>
     </Link>

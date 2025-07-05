@@ -1,5 +1,7 @@
 /* eslint-disable no-console, @typescript-eslint/no-explicit-any, @typescript-eslint/no-non-null-assertion */
 
+import { AdminConfig } from './admin.types';
+
 // storage type 常量: 'localstorage' | 'database'，默认 'localstorage'
 const STORAGE_TYPE =
   (process.env.NEXT_PUBLIC_STORAGE_TYPE as
@@ -64,6 +66,10 @@ export interface IStorage {
 
   // 用户列表
   getAllUsers(): Promise<string[]>;
+
+  // 管理员配置相关
+  getAdminConfig(): Promise<AdminConfig | null>;
+  setAdminConfig(config: AdminConfig): Promise<void>;
 }
 
 // ---------------- Redis 实现 ----------------
@@ -220,6 +226,20 @@ class RedisStorage implements IStorage {
         return match ? match[1] : undefined;
       })
       .filter((u): u is string => typeof u === 'string');
+  }
+
+  // ---------- 管理员配置 ----------
+  private adminConfigKey() {
+    return 'admin:config';
+  }
+
+  async getAdminConfig(): Promise<AdminConfig | null> {
+    const val = await this.client.get(this.adminConfigKey());
+    return val ? (JSON.parse(val) as AdminConfig) : null;
+  }
+
+  async setAdminConfig(config: AdminConfig): Promise<void> {
+    await this.client.set(this.adminConfigKey(), JSON.stringify(config));
   }
 }
 
@@ -393,6 +413,20 @@ export class DbManager {
       return (this.storage as any).getAllUsers();
     }
     return [];
+  }
+
+  // ---------- 管理员配置 ----------
+  async getAdminConfig(): Promise<AdminConfig | null> {
+    if (typeof (this.storage as any).getAdminConfig === 'function') {
+      return (this.storage as any).getAdminConfig();
+    }
+    return null;
+  }
+
+  async saveAdminConfig(config: AdminConfig): Promise<void> {
+    if (typeof (this.storage as any).setAdminConfig === 'function') {
+      await (this.storage as any).setAdminConfig(config);
+    }
   }
 }
 

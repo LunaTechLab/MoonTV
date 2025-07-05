@@ -1,4 +1,4 @@
-/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable react-hooks/exhaustive-deps, @typescript-eslint/no-explicit-any */
 'use client';
 
 import { Search, X } from 'lucide-react';
@@ -29,11 +29,12 @@ function SearchPageClient() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
 
   // 视图模式：聚合(agg) 或 全部(all)，默认值由环境变量 NEXT_PUBLIC_AGGREGATE_SEARCH_RESULT 决定
+  const defaultAggregate =
+    typeof window !== 'undefined' &&
+    Boolean((window as any).RUNTIME_CONFIG?.AGGREGATE_SEARCH_RESULT);
+
   const [viewMode, setViewMode] = useState<'agg' | 'all'>(
-    process.env.NEXT_PUBLIC_AGGREGATE_SEARCH_RESULT === 'false' ||
-      process.env.NEXT_PUBLIC_AGGREGATE_SEARCH_RESULT === '0'
-      ? 'all'
-      : 'agg'
+    defaultAggregate ? 'agg' : 'all'
   );
 
   // 聚合后的结果（按标题和年份分组）

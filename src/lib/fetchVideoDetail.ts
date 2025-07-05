@@ -1,4 +1,4 @@
-import { getApiSites } from '@/lib/config';
+import { getAvailableApiSites } from '@/lib/config';
 import { SearchResult } from '@/lib/types';
 
 import { getDetailFromApi, searchFromApi } from './downstream';
@@ -34,7 +34,7 @@ export async function fetchVideoDetail({
   fallbackTitle = '',
 }: FetchVideoDetailOptions): Promise<VideoDetail> {
   // 优先通过搜索接口查找精确匹配
-  const apiSites = getApiSites();
+  const apiSites = getAvailableApiSites();
   const apiSite = apiSites.find((site) => site.key === source);
   if (!apiSite) {
     throw new Error('无效的API来源');

@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import { NextRequest, NextResponse } from 'next/server';
 
+import { getConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 
 export const runtime = 'edge';
@@ -42,6 +43,22 @@ export async function POST(req: NextRequest) {
     }
     if (!password || typeof password !== 'string') {
       return NextResponse.json({ error: '密码不能为空' }, { status: 400 });
+    }
+
+    // 可能是站长，直接读环境变量
+    if (
+      username === process.env.USERNAME &&
+      password === process.env.PASSWORD
+    ) {
+      return NextResponse.json({ ok: true });
+    } else if (username === process.env.USERNAME) {
+      return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 });
+    }
+
+    const config = getConfig();
+    const user = config.UserConfig.Users.find((u) => u.username === username);
+    if (user && user.banned) {
+      return NextResponse.json({ error: '用户被封禁' }, { status: 401 });
     }
 
     // 校验用户密码

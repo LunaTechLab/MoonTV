@@ -1,10 +1,9 @@
-import { API_CONFIG, ApiSite } from '@/lib/config';
+import { API_CONFIG, ApiSite, getConfig } from '@/lib/config';
 import { SearchResult, VideoDetail } from '@/lib/types';
 import { cleanHtmlTags } from '@/lib/utils';
 
-// 根据环境变量决定最大搜索页数，默认 5
-const MAX_SEARCH_PAGES: number =
-  Number(process.env.NEXT_PUBLIC_SEARCH_MAX_PAGE) || 5;
+const config = getConfig();
+const MAX_SEARCH_PAGES: number = config.SiteConfig.SearchDownstreamMaxPage;
 
 interface ApiSearchItem {
   vod_id: string;

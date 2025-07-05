@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import { getApiSites, getCacheTime } from '@/lib/config';
+import { getAvailableApiSites, getCacheTime } from '@/lib/config';
 import { searchFromApi } from '@/lib/downstream';
 
 export const runtime = 'edge';
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const apiSites = getApiSites();
+  const apiSites = getAvailableApiSites();
   const searchPromises = apiSites.map((site) => searchFromApi(site, query));
 
   try {

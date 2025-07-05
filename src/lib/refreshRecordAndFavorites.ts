@@ -12,15 +12,18 @@ async function refreshRecordAndFavorites() {
 
   try {
     const users = await db.getAllUsers();
-    // 函数级缓存：key 为 `${source}+${id}`，值为 Promise<VideoDetail>
-    const detailCache = new Map<string, Promise<VideoDetail>>();
+    if (process.env.USERNAME && !users.includes(process.env.USERNAME)) {
+      users.push(process.env.USERNAME);
+    }
+    // 函数级缓存：key 为 `${source}+${id}`，值为 Promise<VideoDetail | null>
+    const detailCache = new Map<string, Promise<VideoDetail | null>>();
 
-    // 获取详情 Promise（带缓存）
-    const getDetail = (
+    // 获取详情 Promise（带缓存和错误处理）
+    const getDetail = async (
       source: string,
       id: string,
       fallbackTitle: string
-    ): Promise<VideoDetail> => {
+    ): Promise<VideoDetail | null> => {
       const key = `${source}+${id}`;
       let promise = detailCache.get(key);
       if (!promise) {
@@ -28,58 +31,123 @@ async function refreshRecordAndFavorites() {
           source,
           id,
           fallbackTitle: fallbackTitle.trim(),
-        });
-        detailCache.set(key, promise);
+        })
+          .then((detail) => {
+            // 成功时才缓存结果
+            const successPromise = Promise.resolve(detail);
+            detailCache.set(key, successPromise);
+            return detail;
+          })
+          .catch((err) => {
+            console.error(`获取视频详情失败 (${source}+${id}):`, err);
+            return null;
+          });
       }
       return promise;
     };
 
     for (const user of users) {
+      console.log(`开始处理用户: ${user}`);
+
       // 播放记录
-      const playRecords = await db.getAllPlayRecords(user);
-      for (const [key, record] of Object.entries(playRecords)) {
-        const [source, id] = key.split('+');
-        if (!source || !id) continue;
+      try {
+        const playRecords = await db.getAllPlayRecords(user);
+        const totalRecords = Object.keys(playRecords).length;
+        let processedRecords = 0;
 
-        const detail: VideoDetail = await getDetail(source, id, record.title);
+        for (const [key, record] of Object.entries(playRecords)) {
+          try {
+            const [source, id] = key.split('+');
+            if (!source || !id) {
+              console.warn(`跳过无效的播放记录键: ${key}`);
+              continue;
+            }
 
-        const episodeCount = detail.episodes?.length || 0;
-        if (episodeCount > 0 && episodeCount !== record.total_episodes) {
-          await db.savePlayRecord(user, source, id, {
-            title: record.title,
-            source_name: record.source_name,
-            cover: record.cover,
-            index: record.index,
-            total_episodes: episodeCount,
-            play_time: record.play_time,
-            total_time: record.total_time,
-            save_time: record.save_time,
-          });
+            const detail = await getDetail(source, id, record.title);
+            if (!detail) {
+              console.warn(`跳过无法获取详情的播放记录: ${key}`);
+              continue;
+            }
+
+            const episodeCount = detail.episodes?.length || 0;
+            if (episodeCount > 0 && episodeCount !== record.total_episodes) {
+              await db.savePlayRecord(user, source, id, {
+                title: record.title,
+                source_name: record.source_name,
+                cover: record.cover,
+                index: record.index,
+                total_episodes: episodeCount,
+                play_time: record.play_time,
+                total_time: record.total_time,
+                save_time: record.save_time,
+              });
+              console.log(
+                `更新播放记录: ${record.title} (${record.total_episodes} -> ${episodeCount})`
+              );
+            }
+
+            processedRecords++;
+          } catch (err) {
+            console.error(`处理播放记录失败 (${key}):`, err);
+            // 继续处理下一个记录
+          }
         }
+
+        console.log(`播放记录处理完成: ${processedRecords}/${totalRecords}`);
+      } catch (err) {
+        console.error(`获取用户播放记录失败 (${user}):`, err);
       }
 
       // 收藏
-      const favorites = await db.getAllFavorites(user);
-      for (const [key, fav] of Object.entries(favorites)) {
-        const [source, id] = key.split('+');
-        if (!source || !id) continue;
+      try {
+        const favorites = await db.getAllFavorites(user);
+        const totalFavorites = Object.keys(favorites).length;
+        let processedFavorites = 0;
 
-        const favDetail: VideoDetail = await getDetail(source, id, fav.title);
+        for (const [key, fav] of Object.entries(favorites)) {
+          try {
+            const [source, id] = key.split('+');
+            if (!source || !id) {
+              console.warn(`跳过无效的收藏键: ${key}`);
+              continue;
+            }
 
-        const favEpisodeCount = favDetail.episodes?.length || 0;
-        if (favEpisodeCount > 0 && favEpisodeCount !== fav.total_episodes) {
-          await db.saveFavorite(user, source, id, {
-            title: fav.title,
-            source_name: fav.source_name,
-            cover: fav.cover,
-            total_episodes: favEpisodeCount,
-            save_time: fav.save_time,
-          });
+            const favDetail = await getDetail(source, id, fav.title);
+            if (!favDetail) {
+              console.warn(`跳过无法获取详情的收藏: ${key}`);
+              continue;
+            }
+
+            const favEpisodeCount = favDetail.episodes?.length || 0;
+            if (favEpisodeCount > 0 && favEpisodeCount !== fav.total_episodes) {
+              await db.saveFavorite(user, source, id, {
+                title: fav.title,
+                source_name: fav.source_name,
+                cover: fav.cover,
+                total_episodes: favEpisodeCount,
+                save_time: fav.save_time,
+              });
+              console.log(
+                `更新收藏: ${fav.title} (${fav.total_episodes} -> ${favEpisodeCount})`
+              );
+            }
+
+            processedFavorites++;
+          } catch (err) {
+            console.error(`处理收藏失败 (${key}):`, err);
+            // 继续处理下一个收藏
+          }
         }
+
+        console.log(`收藏处理完成: ${processedFavorites}/${totalFavorites}`);
+      } catch (err) {
+        console.error(`获取用户收藏失败 (${user}):`, err);
       }
     }
+
+    console.log('刷新播放记录/收藏任务完成');
   } catch (err) {
-    console.error('刷新播放记录/收藏失败', err);
+    console.error('刷新播放记录/收藏任务启动失败', err);
   }
 }
 

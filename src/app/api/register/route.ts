@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 import { NextRequest, NextResponse } from 'next/server';
 
+import { getConfig } from '@/lib/config';
 import { db } from '@/lib/db';
 
 export const runtime = 'edge';
@@ -20,8 +21,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const config = getConfig();
     // 校验是否开放注册
-    if (process.env.NEXT_PUBLIC_ENABLE_REGISTER !== 'true') {
+    if (!config.UserConfig.AllowRegister) {
       return NextResponse.json({ error: '当前未开放注册' }, { status: 400 });
     }
 
@@ -32,6 +34,11 @@ export async function POST(req: NextRequest) {
     }
     if (!password || typeof password !== 'string') {
       return NextResponse.json({ error: '密码不能为空' }, { status: 400 });
+    }
+
+    // 检查是否和管理员重复
+    if (username === process.env.USERNAME) {
+      return NextResponse.json({ error: '用户已存在' }, { status: 400 });
     }
 
     try {
