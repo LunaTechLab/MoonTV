@@ -13,13 +13,16 @@ import { ThemeProvider } from '../components/ThemeProvider';
 
 const inter = Inter({ subsets: ['latin'] });
 
-const config = getConfig();
+// 动态生成 metadata，支持配置更新后的标题变化
+export async function generateMetadata(): Promise<Metadata> {
+  const config = getConfig();
 
-export const metadata: Metadata = {
-  title: config.SiteConfig.SiteName,
-  description: '影视聚合',
-  manifest: '/manifest.json',
-};
+  return {
+    title: config.SiteConfig.SiteName,
+    description: '影视聚合',
+    manifest: '/manifest.json',
+  };
+}
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -34,6 +37,7 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const config = getConfig();
   const siteName = config.SiteConfig.SiteName;
   const announcement = config.SiteConfig.Announcement;
 

@@ -49,6 +49,14 @@ export async function POST(req: NextRequest) {
       }
 
       await db.registerUser(username, password);
+
+      // 添加到配置中并保存
+      config.UserConfig.Users.push({
+        username,
+        role: 'user',
+      });
+      await db.saveAdminConfig(config);
+
       return NextResponse.json({ ok: true });
     } catch (err) {
       console.error('数据库注册失败', err);

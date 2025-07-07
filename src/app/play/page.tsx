@@ -926,12 +926,7 @@ function PlayPageClient() {
   // 用户点击悬浮按钮 -> 请求全屏并锁定横屏
   const handleForceLandscape = async () => {
     try {
-      const el: any = document.documentElement;
-      if (el.requestFullscreen) {
-        await el.requestFullscreen();
-      } else if (el.webkitRequestFullscreen) {
-        el.webkitRequestFullscreen();
-      }
+      playerRef.current?.enterFullscreen();
 
       if (screen.orientation && (screen.orientation as any).lock) {
         await (screen.orientation as any).lock('landscape');
@@ -1181,7 +1176,7 @@ function PlayPageClient() {
               }
               window.history.back();
             }}
-            className='absolute left-0 sm:left-6 text-white hover:text-gray-300 transition-colors p-2'
+            className='absolute vds-button left-0 sm:left-6 text-white hover:text-gray-300 transition-colors p-2'
           >
             <svg
               width='24'
@@ -1441,13 +1436,13 @@ function PlayPageClient() {
         />
         <DefaultVideoLayout
           icons={defaultLayoutIcons}
-          noGestures={true}
+          noScrubGesture={true}
           slots={{
             googleCastButton: null,
             settingsMenu: null,
             captionButton: null,
-            muteButton: null, // 隐藏静音按钮
-            volumeSlider: null, // 隐藏音量条
+            // muteButton: null, // 隐藏静音按钮
+            // volumeSlider: null, // 隐藏音量条
             airPlayButton: null, // 隐藏默认 AirPlay 按钮
             beforeCurrentTime: (
               <>
@@ -1909,7 +1904,7 @@ const FavoriteIcon = ({ filled }: { filled: boolean }) => {
         xmlns='http://www.w3.org/2000/svg'
       >
         <path
-          d='M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.41-1.41L7.83 13H20v-2z'
+          d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'
           fill='#ef4444' /* Tailwind red-500 */
           stroke='#ef4444'
           strokeWidth='2'
