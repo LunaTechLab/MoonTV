@@ -55,7 +55,6 @@ function PlayPageClient() {
   });
 
   // 视频基本信息
-  const [videoType, setVideoType] = useState(searchParams.get('type') || '');
   const [videoDoubanId, setVideoDoubanId] = useState(
     searchParams.get('douban_id') || ''
   );
@@ -108,6 +107,10 @@ function PlayPageClient() {
   const [sourceSearchError, setSourceSearchError] = useState<string | null>(
     null
   );
+
+  // 折叠状态（仅在 lg 及以上屏幕有效）
+  const [isEpisodeSelectorCollapsed, setIsEpisodeSelectorCollapsed] =
+    useState(false);
 
   // 播放进度保存相关
   const saveIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -252,7 +255,6 @@ function PlayPageClient() {
         setCurrentSource(searchResults[0].source);
         setCurrentId(searchResults[0].id);
         setVideoYear(searchResults[0].year);
-        setVideoType('');
         setVideoDoubanId(''); // 清空豆瓣ID
         // 替换URL参数
         const newUrl = new URL(window.location.href);
@@ -418,10 +420,6 @@ function PlayPageClient() {
               : true) &&
             (videoDoubanId && result.douban_id
               ? result.douban_id.toString() === videoDoubanId
-              : true) &&
-            (videoType
-              ? (videoType === 'movie' && result.episodes.length === 1) ||
-                (videoType === 'tv' && result.episodes.length > 1)
               : true)
         );
         if (exactMatchs.length > 0) {
@@ -664,13 +662,13 @@ function PlayPageClient() {
     }
 
     try {
-      await savePlayRecord(currentSource, currentId, {
+      await savePlayRecord(currentSourceRef.current, currentIdRef.current, {
         title: videoTitleRef.current,
         source_name: detailRef.current?.source_name || '',
-        year: videoYear || detailRef.current?.year || '',
-        cover: videoCover,
-        index: currentEpisodeIndex + 1, // 转换为1基索引
-        total_episodes: totalEpisodes,
+        year: detailRef.current?.year || '',
+        cover: detailRef.current?.poster || '',
+        index: currentEpisodeIndexRef.current + 1, // 转换为1基索引
+        total_episodes: detailRef.current?.episodes.length || 1,
         play_time: Math.floor(currentTime),
         total_time: Math.floor(duration),
         save_time: Date.now(),
@@ -741,15 +739,15 @@ function PlayPageClient() {
 
   // 切换收藏
   const handleToggleFavorite = async () => {
-    if (!currentSource || !currentId) return;
+    if (!videoTitleRef.current || !detailRef.current || !currentSourceRef.current || !currentIdRef.current) return;
 
     try {
-      const newState = await toggleFavorite(currentSource, currentId, {
-        title: videoTitle,
-        source_name: detail?.source_name || '',
-        year: detail?.year || videoYear || '',
-        cover: videoCover || '',
-        total_episodes: totalEpisodes || 1,
+      const newState = await toggleFavorite(currentSourceRef.current, currentIdRef.current, {
+        title: videoTitleRef.current,
+        source_name: detailRef.current?.source_name || '',
+        year: detailRef.current?.year || '',
+        cover: detailRef.current?.poster || '',
+        total_episodes: detailRef.current?.episodes.length || 1,
         save_time: Date.now(),
       });
       setFavorited(newState);
@@ -1207,7 +1205,7 @@ function PlayPageClient() {
 
   return (
     <PageLayout activePath='/play'>
-      <div className='flex flex-col gap-6 py-4 px-5 lg:px-10 xl:px-20'>
+      <div className='flex flex-col gap-3 py-4 px-5 lg:px-10 xl:px-20'>
         {/* 第一行：影片标题 */}
         <div className='py-1'>
           <h1 className='text-xl font-semibold text-gray-900 dark:text-gray-100'>
@@ -1220,30 +1218,89 @@ function PlayPageClient() {
           </h1>
         </div>
         {/* 第二行：播放器和选集 */}
-        <div className='grid grid-cols-1 md:grid-cols-4 gap-4 lg:h-[500px] xl:h-[650px]'>
-          {/* 播放器 */}
-          <div className='md:col-span-3 h-full'>
-            <div
-              ref={artRef}
-              className='bg-black w-full h-[300px] lg:h-full rounded-xl overflow-hidden border border-white/0 dark:border-white/30'
-            ></div>
+        <div className='space-y-2'>
+          {/* 折叠控制 - 仅在 lg 及以上屏幕显示 */}
+          <div className='hidden lg:flex justify-end'>
+            <button
+              onClick={() =>
+                setIsEpisodeSelectorCollapsed(!isEpisodeSelectorCollapsed)
+              }
+              className='group relative flex items-center space-x-1.5 px-3 py-1.5 rounded-full bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md transition-all duration-200'
+              title={
+                isEpisodeSelectorCollapsed ? '显示选集面板' : '隐藏选集面板'
+              }
+            >
+              <svg
+                className={`w-3.5 h-3.5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${
+                  isEpisodeSelectorCollapsed ? 'rotate-180' : 'rotate-0'
+                }`}
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='M9 5l7 7-7 7'
+                />
+              </svg>
+              <span className='text-xs font-medium text-gray-600 dark:text-gray-300'>
+                {isEpisodeSelectorCollapsed ? '显示' : '隐藏'}
+              </span>
+
+              {/* 精致的状态指示点 */}
+              <div
+                className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full transition-all duration-200 ${
+                  isEpisodeSelectorCollapsed
+                    ? 'bg-orange-400 animate-pulse'
+                    : 'bg-green-400'
+                }`}
+              ></div>
+            </button>
           </div>
 
-          {/* 选集和换源 */}
-          <div className='md:col-span-1 h-[300px] lg:h-full md:overflow-hidden'>
-            <EpisodeSelector
-              totalEpisodes={totalEpisodes}
-              value={currentEpisodeIndex + 1}
-              onChange={handleEpisodeChange}
-              onSourceChange={handleSourceChange}
-              currentSource={currentSource}
-              currentId={currentId}
-              videoTitle={videoTitle}
-              availableSources={availableSources}
-              onSearchSources={handleSearchSources}
-              sourceSearchLoading={sourceSearchLoading}
-              sourceSearchError={sourceSearchError}
-            />
+          <div
+            className={`grid gap-4 lg:h-[500px] xl:h-[650px] transition-all duration-300 ease-in-out ${
+              isEpisodeSelectorCollapsed
+                ? 'grid-cols-1'
+                : 'grid-cols-1 md:grid-cols-4'
+            }`}
+          >
+            {/* 播放器 */}
+            <div
+              className={`h-full transition-all duration-300 ease-in-out ${
+                isEpisodeSelectorCollapsed ? 'col-span-1' : 'md:col-span-3'
+              }`}
+            >
+              <div
+                ref={artRef}
+                className='bg-black w-full h-[300px] lg:h-full rounded-xl overflow-hidden border border-white/0 dark:border-white/30 shadow-lg'
+              ></div>
+            </div>
+
+            {/* 选集和换源 - 在移动端始终显示，在 lg 及以上可折叠 */}
+            <div
+              className={`h-[300px] lg:h-full md:overflow-hidden transition-all duration-300 ease-in-out ${
+                isEpisodeSelectorCollapsed
+                  ? 'md:col-span-1 lg:hidden lg:opacity-0 lg:scale-95'
+                  : 'md:col-span-1 lg:opacity-100 lg:scale-100'
+              }`}
+            >
+              <EpisodeSelector
+                totalEpisodes={totalEpisodes}
+                value={currentEpisodeIndex + 1}
+                onChange={handleEpisodeChange}
+                onSourceChange={handleSourceChange}
+                currentSource={currentSource}
+                currentId={currentId}
+                videoTitle={videoTitle}
+                availableSources={availableSources}
+                onSearchSources={handleSearchSources}
+                sourceSearchLoading={sourceSearchLoading}
+                sourceSearchError={sourceSearchError}
+              />
+            </div>
           </div>
         </div>
 

@@ -3,7 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 import { db } from '@/lib/db';
-import { PlayRecord } from '@/lib/db';
+import { PlayRecord } from '@/lib/types';
 
 export const runtime = 'edge';
 

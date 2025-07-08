@@ -3,7 +3,8 @@
 import { NextResponse } from 'next/server';
 
 import { getConfig } from '@/lib/config';
-import { getStorage, IStorage } from '@/lib/db';
+import { getStorage } from '@/lib/db';
+import { IStorage } from '@/lib/types';
 
 export const runtime = 'edge';
 

@@ -10,7 +10,6 @@ interface DemoCardProps {
   title: string;
   poster: string;
   rate?: string;
-  type?: string;
 }
 
 function PlayCircleSolid({
@@ -42,7 +41,7 @@ function PlayCircleSolid({
   );
 }
 
-const DemoCard = ({ id, title, poster, rate, type }: DemoCardProps) => {
+const DemoCard = ({ id, title, poster, rate }: DemoCardProps) => {
   const [hover, setHover] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const router = useRouter();
@@ -50,9 +49,7 @@ const DemoCard = ({ id, title, poster, rate, type }: DemoCardProps) => {
 
   const handleClick = () => {
     router.push(
-      `/play?title=${encodeURIComponent(
-        title.trim()
-      )}&douban_id=${id}&type=${type}`
+      `/play?title=${encodeURIComponent(title.trim())}&douban_id=${id}`
     );
   };
 
