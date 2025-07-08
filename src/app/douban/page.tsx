@@ -79,8 +79,7 @@ function DoubanPageClient() {
           setIsLoadingMore(true);
 
           const response = await fetch(
-            `/api/douban?type=${type}&tag=${tag}&pageSize=25&pageStart=${
-              currentPage * 25
+            `/api/douban?type=${type}&tag=${tag}&pageSize=25&pageStart=${currentPage * 25
             }`
           );
 
@@ -177,6 +176,8 @@ function DoubanPageClient() {
           <p className='text-gray-600 dark:text-gray-400'>来自豆瓣的精选内容</p>
         </div>
 
+
+
         {/* 内容展示区域 */}
         <div className='max-w-[95%] mx-auto mt-8 overflow-visible'>
           {error ? (
@@ -192,20 +193,21 @@ function DoubanPageClient() {
               <div className='grid grid-cols-3 gap-x-2 gap-y-12 px-0 sm:px-2 sm:grid-cols-[repeat(auto-fit,minmax(160px,1fr))] sm:gap-x-8 sm:gap-y-20'>
                 {loading
                   ? // 显示骨架屏
-                    skeletonData.map((index) => (
-                      <DoubanCardSkeleton key={index} />
-                    ))
+                  skeletonData.map((index) => (
+                    <DoubanCardSkeleton key={index} />
+                  ))
                   : // 显示实际数据
-                    doubanData.map((item, index) => (
-                      <div key={`${item.title}-${index}`} className='w-full'>
-                        <DemoCard
-                          id={item.id}
-                          title={item.title}
-                          poster={item.poster}
-                          rate={item.rate}
-                        />
-                      </div>
-                    ))}
+                  doubanData.map((item, index) => (
+                    <div key={`${item.title}-${index}`} className='w-full'>
+                      <DemoCard
+                        id={item.id}
+                        title={item.title}
+                        poster={item.poster}
+                        rate={item.rate}
+                        type={type || 'movie'}
+                      />
+                    </div>
+                  ))}
               </div>
 
               {/* 加载更多指示器 */}
