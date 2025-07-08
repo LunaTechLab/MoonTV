@@ -1,6 +1,14 @@
 {
   "cache_time": 7200,
   "api_site": {
+    "liangzi": {
+      "api": "https://cj.lziapi.com/api.php/provide/vod",
+      "name": "量子资源"
+    },
+    "shandian": {
+      "api": "https://sdzyapi.com/api.php/provide/vod",
+      "name": "闪电资源"
+    },
     "heimuer": {
       "api": "https://json.heimuer.xyz/api.php/provide/vod",
       "name": "黑木耳",
@@ -31,10 +39,6 @@
     "zy360": {
       "api": "https://360zy.com/api.php/provide/vod",
       "name": "360资源"
-    },
-    "iqiyi": {
-      "api": "https://www.iqiyizyapi.com/api.php/provide/vod",
-      "name": "iqiyi资源"
     },
     "wolong": {
       "api": "https://wolongzyw.com/api.php/provide/vod",
@@ -76,6 +80,10 @@
     "ikun": {
       "api": "https://ikunzyapi.com/api.php/provide/vod",
       "name": "iKun资源"
+    },
+    "bdzy": {
+      "api": "https://api.apibdzy.com/api.php/provide/vod",
+      "name": "百度云资源"
     }
   }
 }
