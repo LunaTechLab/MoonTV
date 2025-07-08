@@ -186,11 +186,7 @@ function SearchPageClient() {
                   ? aggregatedResults.map(([mapKey, group]) => {
                       return (
                         <div key={`agg-${mapKey}`} className='w-full'>
-                          <AggregateCard
-                            items={group}
-                            query={searchQuery}
-                            year={group[0].year}
-                          />
+                          <AggregateCard items={group} year={group[0].year} />
                         </div>
                       );
                     })

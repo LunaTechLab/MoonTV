@@ -19,7 +19,6 @@ interface SearchResult {
 
 interface AggregateCardProps {
   /** 同一标题下的多个搜索结果 */
-  query?: string;
   year?: string;
   items: SearchResult[];
 }
@@ -58,11 +57,7 @@ function PlayCircleSolid({
  * 点击播放按钮 -> 跳到第一个源播放
  * 点击卡片其他区域 -> 跳到聚合详情页 (/aggregate)
  */
-const AggregateCard: React.FC<AggregateCardProps> = ({
-  query = '',
-  year = 0,
-  items,
-}) => {
+const AggregateCard: React.FC<AggregateCardProps> = ({ year = 0, items }) => {
   // 使用列表中的第一个结果做展示 & 播放
   const first = items[0];
   const [playHover, setPlayHover] = useState(false);
@@ -118,11 +113,9 @@ const AggregateCard: React.FC<AggregateCardProps> = ({
 
   return (
     <Link
-      href={`/aggregate?q=${encodeURIComponent(
-        query.trim()
-      )}&title=${encodeURIComponent(first.title)}${
-        year ? `&year=${encodeURIComponent(year)}` : ''
-      }&type=${mostFrequentEpisodes > 1 ? 'tv' : 'movie'}`}
+      href={`/play?source=${first.source}&id=${
+        first.id
+      }&title=${encodeURIComponent(first.title)}${year ? `&year=${year}` : ''}`}
     >
       <div className='group relative w-full rounded-lg bg-transparent flex flex-col cursor-pointer transition-all duration-300 ease-in-out'>
         {/* 封面图片 2:3 */}
@@ -162,7 +155,7 @@ const AggregateCard: React.FC<AggregateCardProps> = ({
                       first.id
                     }&title=${encodeURIComponent(first.title)}${
                       year ? `&year=${year}` : ''
-                    }&from=aggregate`
+                    }`
                   );
                 }}
                 onMouseEnter={() => setPlayHover(true)}

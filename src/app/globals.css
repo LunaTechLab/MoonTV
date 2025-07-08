@@ -153,20 +153,9 @@ div[data-media-provider] video {
   object-fit: contain;
 }
 
-/* Vidstack Menu 自定义样式：背景黑色，文字白色 */
-.vds-menu-items {
-  background-color: #000;
-  color: #fff;
-}
-
-.vds-radio {
-  color: #fff !important;
-}
-
-.vds-radio:hover {
-  background-color: rgba(245, 245, 245, 0.1) !important;
-}
-
-.vds-radio .vds-icon {
-  color: #fff !important;
+.art-poster {
+  background-size: contain !important; /* 使图片完整展示 */
+  background-position: center center !important; /* 居中显示 */
+  background-repeat: no-repeat !important; /* 防止重复 */
+  background-color: #000 !important; /* 其余区域填充为黑色 */
 }

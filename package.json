@@ -29,9 +29,10 @@
     "@heroicons/react": "^2.2.0",
     "@upstash/redis": "^1.25.0",
     "@vidstack/react": "^1.12.13",
+    "artplayer": "^5.2.3",
     "clsx": "^2.0.0",
     "framer-motion": "^12.18.1",
-    "hls.js": "^1.6.5",
+    "hls.js": "^1.6.6",
     "lucide-react": "^0.438.0",
     "media-icons": "^1.1.5",
     "next": "^14.2.23",
@@ -42,11 +43,11 @@
     "react-dom": "^18.2.0",
     "react-icons": "^5.4.0",
     "redis": "^4.6.7",
+    "sweetalert2": "^11.11.0",
     "swiper": "^11.2.8",
     "tailwind-merge": "^2.6.0",
     "vidstack": "^0.6.15",
-    "zod": "^3.24.1",
-    "sweetalert2": "^11.11.0"
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@commitlint/cli": "^16.3.0",
