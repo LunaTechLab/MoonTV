@@ -149,7 +149,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
             className={`flex-1 py-3 px-6 text-center cursor-pointer transition-all duration-200 font-medium
               ${
                 activeTab === 'episodes'
-                  ? 'text-green-500 dark:text-green-400'
+                  ? 'text-green-600 dark:text-green-400'
                   : 'text-gray-700 hover:text-green-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-green-400 hover:bg-black/3 dark:hover:bg-white/3'
               }
             `.trim()}
@@ -162,7 +162,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
           className={`flex-1 py-3 px-6 text-center cursor-pointer transition-all duration-200 font-medium
             ${
               activeTab === 'sources'
-                ? 'text-green-500 dark:text-green-400'
+                ? 'text-green-600 dark:text-green-400'
                 : 'text-gray-700 hover:text-green-600 bg-black/5 dark:bg-white/5 dark:text-gray-300 dark:hover:text-green-400 hover:bg-black/3 dark:hover:bg-white/3'
             }
           `.trim()}

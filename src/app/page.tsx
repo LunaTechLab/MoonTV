@@ -5,12 +5,15 @@ import Link from 'next/link';
 import { Suspense, useEffect, useState } from 'react';
 
 // 客户端收藏 API
-import { clearAllFavorites, getAllFavorites } from '@/lib/db.client';
+import {
+  clearAllFavorites,
+  getAllFavorites,
+  getAllPlayRecords,
+} from '@/lib/db.client';
 import { DoubanItem, DoubanResult } from '@/lib/types';
 
 import CapsuleSwitch from '@/components/CapsuleSwitch';
 import ContinueWatching from '@/components/ContinueWatching';
-import DemoCard from '@/components/DemoCard';
 import PageLayout from '@/components/PageLayout';
 import ScrollableRow from '@/components/ScrollableRow';
 import { useSite } from '@/components/SiteProvider';
@@ -40,6 +43,7 @@ function HomeClient() {
     poster: string;
     episodes: number;
     source_name: string;
+    currentEpisode?: number;
   };
 
   const [favoriteItems, setFavoriteItems] = useState<FavoriteItem[]>([]);
@@ -77,14 +81,23 @@ function HomeClient() {
     if (activeTab !== 'favorites') return;
 
     (async () => {
-      const all = await getAllFavorites();
+      const [allFavorites, allPlayRecords] = await Promise.all([
+        getAllFavorites(),
+        getAllPlayRecords(),
+      ]);
+
       // 根据保存时间排序（从近到远）
-      const sorted = Object.entries(all)
+      const sorted = Object.entries(allFavorites)
         .sort(([, a], [, b]) => b.save_time - a.save_time)
         .map(([key, fav]) => {
           const plusIndex = key.indexOf('+');
           const source = key.slice(0, plusIndex);
           const id = key.slice(plusIndex + 1);
+
+          // 查找对应的播放记录，获取当前集数
+          const playRecord = allPlayRecords[key];
+          const currentEpisode = playRecord?.index;
+
           return {
             id,
             source,
@@ -93,6 +106,7 @@ function HomeClient() {
             poster: fav.cover,
             episodes: fav.total_episodes,
             source_name: fav.source_name,
+            currentEpisode,
           } as FavoriteItem;
         });
       setFavoriteItems(sorted);
@@ -192,10 +206,12 @@ function HomeClient() {
                           key={index}
                           className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
                         >
-                          <DemoCard
-                            id={movie.id}
+                          <VideoCard
+                            id=''
+                            source=''
                             title={movie.title}
                             poster={movie.poster}
+                            source_name=''
                             rate={movie.rate}
                           />
                         </div>
@@ -237,10 +253,12 @@ function HomeClient() {
                           key={index}
                           className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
                         >
-                          <DemoCard
+                          <VideoCard
                             id={show.id}
+                            source=''
                             title={show.title}
                             poster={show.poster}
+                            source_name=''
                             rate={show.rate}
                           />
                         </div>

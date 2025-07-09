@@ -52,7 +52,7 @@ export async function GET(request: Request) {
       );
     } else {
       return NextResponse.json(
-        { result: result },
+        { results: result },
         {
           headers: {
             'Cache-Control': `public, max-age=${cacheTime}`,

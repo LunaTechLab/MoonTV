@@ -159,3 +159,10 @@ div[data-media-provider] video {
   background-repeat: no-repeat !important; /* 防止重复 */
   background-color: #000 !important; /* 其余区域填充为黑色 */
 }
+
+/* 隐藏移动端竖屏时的 pip 按钮 */
+@media (max-width: 768px) and (orientation: portrait) {
+  .art-control-pip {
+    display: none !important;
+  }
+}

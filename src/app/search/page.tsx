@@ -13,7 +13,6 @@ import {
 } from '@/lib/db.client';
 import { SearchResult } from '@/lib/types';
 
-import AggregateCard from '@/components/AggregateCard';
 import PageLayout from '@/components/PageLayout';
 import VideoCard from '@/components/VideoCard';
 
@@ -50,6 +49,14 @@ function SearchPageClient() {
       map.set(key, arr);
     });
     return Array.from(map.entries()).sort((a, b) => {
+      // 优先排序：标题与搜索词完全一致的排在前面
+      const aExactMatch = a[1][0].title === searchQuery.trim();
+      const bExactMatch = b[1][0].title === searchQuery.trim();
+
+      if (aExactMatch && !bExactMatch) return -1;
+      if (!aExactMatch && bExactMatch) return 1;
+
+      // 如果都匹配或都不匹配，则按原来的逻辑排序
       return a[1][0].year === b[1][0].year
         ? a[0].localeCompare(b[0])
         : a[1][0].year > b[1][0].year
@@ -90,6 +97,14 @@ function SearchPageClient() {
       const data = await response.json();
       setSearchResults(
         data.results.sort((a: SearchResult, b: SearchResult) => {
+          // 优先排序：标题与搜索词完全一致的排在前面
+          const aExactMatch = a.title === query.trim();
+          const bExactMatch = b.title === query.trim();
+
+          if (aExactMatch && !bExactMatch) return -1;
+          if (!aExactMatch && bExactMatch) return 1;
+
+          // 如果都匹配或都不匹配，则按原来的逻辑排序
           return a.year === b.year
             ? a.title.localeCompare(b.title)
             : a.year > b.year
@@ -186,7 +201,15 @@ function SearchPageClient() {
                   ? aggregatedResults.map(([mapKey, group]) => {
                       return (
                         <div key={`agg-${mapKey}`} className='w-full'>
-                          <AggregateCard items={group} year={group[0].year} />
+                          <VideoCard
+                            id={group[0].id}
+                            source={group[0].source}
+                            title={group[0].title}
+                            poster={group[0].poster}
+                            source_name={group[0].source_name}
+                            year={group[0].year}
+                            items={group}
+                          />
                         </div>
                       );
                     })

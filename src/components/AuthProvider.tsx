@@ -58,20 +58,47 @@ export default function AuthProvider({ children }: Props) {
   // 认证状态未知时显示加载状态
   if (!isAuthenticated) {
     return (
-      <div className='relative min-h-screen flex items-center justify-center px-4 overflow-hidden'>
+      <div className='flex items-center justify-center min-h-screen bg-transparent'>
         <div className='absolute top-4 right-4'>
           <ThemeToggle />
         </div>
-        <div className='relative z-10 w-full max-w-md rounded-3xl bg-gradient-to-b from-white/90 via-white/70 to-white/40 dark:from-zinc-900/90 dark:via-zinc-900/70 dark:to-zinc-900/40 backdrop-blur-xl shadow-2xl p-10 dark:border dark:border-zinc-800'>
+        <div className='text-center max-w-md mx-auto px-6'>
+          {/* 动画认证图标 */}
+          <div className='relative mb-8'>
+            <div className='relative mx-auto w-24 h-24 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300'>
+              <div className='text-white text-4xl'>🔐</div>
+              {/* 旋转光环 */}
+              <div className='absolute -inset-2 bg-gradient-to-r from-green-500 to-emerald-600 rounded-2xl opacity-20 animate-spin'></div>
+            </div>
+
+            {/* 浮动粒子效果 */}
+            <div className='absolute top-0 left-0 w-full h-full pointer-events-none'>
+              <div className='absolute top-2 left-2 w-2 h-2 bg-green-400 rounded-full animate-bounce'></div>
+              <div
+                className='absolute top-4 right-4 w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce'
+                style={{ animationDelay: '0.5s' }}
+              ></div>
+              <div
+                className='absolute bottom-3 left-6 w-1 h-1 bg-lime-400 rounded-full animate-bounce'
+                style={{ animationDelay: '1s' }}
+              ></div>
+            </div>
+          </div>
+
+          {/* 品牌标题 */}
           <h1 className='text-green-600 tracking-tight text-center text-3xl font-extrabold mb-8 bg-clip-text drop-shadow-sm'>
             {siteName}
           </h1>
-          <div className='flex justify-center my-10'>
-            <div className='animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-green-500' />
+
+          {/* 加载消息 */}
+          <div className='space-y-2'>
+            <p className='text-xl font-semibold text-gray-800 dark:text-gray-200 animate-pulse'>
+              正在验证您的身份...
+            </p>
+            <p className='text-sm text-gray-500 dark:text-gray-400'>
+              请稍候，马上就好
+            </p>
           </div>
-          <p className='text-gray-700 dark:text-gray-300 font-medium text-lg text-center'>
-            正在验证您的身份，请稍候...
-          </p>
         </div>
       </div>
     );

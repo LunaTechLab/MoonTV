@@ -26,7 +26,7 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: '无效的API来源' }, { status: 400 });
     }
 
-    const result = await getDetailFromApi(apiSite, sourceCode);
+    const result = await getDetailFromApi(apiSite, id);
     const cacheTime = getCacheTime();
 
     return NextResponse.json(result, {

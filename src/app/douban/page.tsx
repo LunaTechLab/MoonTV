@@ -6,9 +6,9 @@ import { useEffect, useRef, useState } from 'react';
 
 import { DoubanItem, DoubanResult } from '@/lib/types';
 
-import DemoCard from '@/components/DemoCard';
 import DoubanCardSkeleton from '@/components/DoubanCardSkeleton';
 import PageLayout from '@/components/PageLayout';
+import VideoCard from '@/components/VideoCard';
 
 function DoubanPageClient() {
   const searchParams = useSearchParams();
@@ -198,10 +198,12 @@ function DoubanPageClient() {
                   : // 显示实际数据
                     doubanData.map((item, index) => (
                       <div key={`${item.title}-${index}`} className='w-full'>
-                        <DemoCard
+                        <VideoCard
                           id={item.id}
+                          source=''
                           title={item.title}
                           poster={item.poster}
+                          source_name=''
                           rate={item.rate}
                         />
                       </div>
