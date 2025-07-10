@@ -7,7 +7,6 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 
 import { getConfig } from '@/lib/config';
 
-import AuthProvider from '../components/AuthProvider';
 import { SiteProvider } from '../components/SiteProvider';
 import { ThemeProvider } from '../components/ThemeProvider';
 
@@ -25,11 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  viewportFit: 'cover',
+  themeColor: '#000000',
 };
 
 export default function RootLayout({
@@ -69,7 +64,7 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <SiteProvider siteName={siteName} announcement={announcement}>
-            <AuthProvider>{children}</AuthProvider>
+            {children}
           </SiteProvider>
         </ThemeProvider>
       </body>

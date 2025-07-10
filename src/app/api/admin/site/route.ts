@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any,no-console */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
+import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getConfig } from '@/lib/config';
 import { getStorage } from '@/lib/db';
 
 export const runtime = 'edge';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
   if (storageType === 'localstorage') {
     return NextResponse.json(
@@ -21,17 +22,19 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
 
+    const authInfo = getAuthInfoFromCookie(request);
+    if (!authInfo || !authInfo.username) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const username = authInfo.username;
+
     const {
-      username,
-      password,
       SiteName,
       Announcement,
       SearchDownstreamMaxPage,
       SiteInterfaceCacheTime,
       SearchResultDefaultAggregate,
     } = body as {
-      username?: string;
-      password?: string;
       SiteName: string;
       Announcement: string;
       SearchDownstreamMaxPage: number;
@@ -50,41 +53,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: '参数格式错误' }, { status: 400 });
     }
 
-    if (!username || !password) {
-      return NextResponse.json(
-        { error: '用户名和密码不能为空' },
-        { status: 400 }
-      );
-    }
-
     const adminConfig = getConfig();
     const storage = getStorage();
 
-    // 权限与密码校验
-    if (username === process.env.USERNAME) {
-      // 站长
-      if (password !== process.env.PASSWORD) {
-        return NextResponse.json({ error: '密码错误' }, { status: 401 });
-      }
-    } else {
+    // 权限校验
+    if (username !== process.env.USERNAME) {
       // 管理员
       const user = adminConfig.UserConfig.Users.find(
         (u) => u.username === username
       );
       if (!user || user.role !== 'admin') {
         return NextResponse.json({ error: '权限不足' }, { status: 401 });
-      }
-
-      if (!storage || typeof storage.verifyUser !== 'function') {
-        return NextResponse.json(
-          { error: '存储未配置用户认证' },
-          { status: 500 }
-        );
-      }
-
-      const ok = await storage.verifyUser(username, password);
-      if (!ok) {
-        return NextResponse.json({ error: '密码错误' }, { status: 401 });
       }
     }
 

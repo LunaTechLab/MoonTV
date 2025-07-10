@@ -102,11 +102,6 @@ function PlayPageClient() {
   // 总集数
   const totalEpisodes = detail?.episodes?.length || 0;
 
-  // 长按三倍速相关状态
-  const [isLongPressing, setIsLongPressing] = useState(false);
-  const longPressTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const originalPlaybackRateRef = useRef<number>(1);
-
   // 用于记录是否需要在播放器 ready 后跳转到指定进度
   const resumeTimeRef = useRef<number | null>(null);
   // 上次使用的音量，默认 0.7
@@ -126,10 +121,6 @@ function PlayPageClient() {
   // 播放进度保存相关
   const saveIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastSaveTimeRef = useRef<number>(0);
-  const videoEventListenersRef = useRef<{
-    video: HTMLVideoElement;
-    listeners: Array<{ event: string; handler: EventListener }>;
-  } | null>(null);
 
   const artPlayerRef = useRef<any>(null);
   const artRef = useRef<HTMLDivElement | null>(null);
@@ -738,9 +729,6 @@ function PlayPageClient() {
       if (saveIntervalRef.current) {
         clearInterval(saveIntervalRef.current);
       }
-      if (longPressTimeoutRef.current) {
-        clearTimeout(longPressTimeoutRef.current);
-      }
     };
   }, []);
 
@@ -831,9 +819,6 @@ function PlayPageClient() {
       }集`;
       artPlayerRef.current.poster = videoCover;
       if (artPlayerRef.current?.video) {
-        attachVideoEventListeners(
-          artPlayerRef.current.video as HTMLVideoElement
-        );
         ensureVideoSource(
           artPlayerRef.current.video as HTMLVideoElement,
           videoUrl
@@ -875,9 +860,9 @@ function PlayPageClient() {
         playbackRate: true,
         aspectRatio: false,
         fullscreen: true,
-        fullscreenWeb: false,
+        fullscreenWeb: true,
         subtitleOffset: false,
-        miniProgressBar: true,
+        miniProgressBar: false,
         mutex: true,
         playsInline: true,
         autoPlayback: false,
@@ -885,6 +870,9 @@ function PlayPageClient() {
         theme: '#22c55e',
         lang: 'zh-cn',
         hotkey: false,
+        fastForward: true,
+        autoOrientation: true,
+        lock: true,
         moreVideoAttr: {
           crossOrigin: 'anonymous',
         },
@@ -1044,18 +1032,6 @@ function PlayPageClient() {
         }
       });
 
-      artPlayerRef.current.on('fullscreen', async (state: boolean) => {
-        if (state) {
-          if (screen.orientation && (screen.orientation as any).lock) {
-            await (screen.orientation as any).lock('landscape');
-          }
-        } else {
-          if (screen.orientation && (screen.orientation as any).unlock) {
-            (screen.orientation as any).unlock();
-          }
-        }
-      });
-
       artPlayerRef.current.on('video:timeupdate', () => {
         const now = Date.now();
         if (now - lastSaveTimeRef.current > 5000) {
@@ -1069,9 +1045,6 @@ function PlayPageClient() {
       });
 
       if (artPlayerRef.current?.video) {
-        attachVideoEventListeners(
-          artPlayerRef.current.video as HTMLVideoElement
-        );
         ensureVideoSource(
           artPlayerRef.current.video as HTMLVideoElement,
           videoUrl
@@ -1083,35 +1056,6 @@ function PlayPageClient() {
     }
   }, [Artplayer, Hls, videoUrl, loading, blockAdEnabled]);
 
-  // ---------------------------------------------------------------------------
-  // 视频元素事件监听
-  // ---------------------------------------------------------------------------
-  const attachVideoEventListeners = (video: HTMLVideoElement) => {
-    if (!video) return;
-
-    // 移除旧监听器（如果存在）
-    if (videoEventListenersRef.current) {
-      const { video: oldVideo, listeners } = videoEventListenersRef.current;
-      listeners.forEach(({ event, handler }) => {
-        oldVideo.removeEventListener(event, handler);
-      });
-      videoEventListenersRef.current = null;
-    }
-
-    // 阻止移动端长按弹出系统菜单
-    const contextMenuHandler = (e: Event) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    video.addEventListener('contextmenu', contextMenuHandler);
-
-    videoEventListenersRef.current = {
-      video,
-      listeners: [{ event: 'contextmenu', handler: contextMenuHandler }],
-    };
-  };
-
   // 当组件卸载时清理定时器
   useEffect(() => {
     return () => {
@@ -1120,90 +1064,6 @@ function PlayPageClient() {
       }
     };
   }, []);
-
-  // ---------------------------------------------------------------------------
-  // 移动端触摸（长按三倍速）
-  // ---------------------------------------------------------------------------
-  // 长按三倍速处理函数
-  const handleTouchStart = (e: TouchEvent) => {
-    // 防止在控制栏区域触发
-    const target = e.target as HTMLElement;
-    if (
-      target.closest('.art-controls') ||
-      target.closest('.art-contextmenu') ||
-      target.closest('.art-layer')
-    ) {
-      return;
-    }
-
-    // 仅在播放时触发
-    if (!artPlayerRef.current?.playing) {
-      return;
-    }
-
-    // 清除之前的定时器
-    if (longPressTimeoutRef.current) {
-      clearTimeout(longPressTimeoutRef.current);
-    }
-
-    // 设置长按检测定时器（500ms）
-    longPressTimeoutRef.current = setTimeout(() => {
-      if (artPlayerRef.current) {
-        // 保存原始播放速度
-        originalPlaybackRateRef.current = artPlayerRef.current.playbackRate;
-
-        // 设置三倍速
-        artPlayerRef.current.playbackRate = 3;
-
-        // 更新状态
-        setIsLongPressing(true);
-        artPlayerRef.current.notice.show = '3x';
-
-        // 触发震动反馈（如果支持）
-        if (navigator.vibrate) {
-          navigator.vibrate(50);
-        }
-      }
-    }, 500);
-  };
-
-  const handleTouchEnd = () => {
-    // 清除长按检测定时器
-    if (longPressTimeoutRef.current) {
-      clearTimeout(longPressTimeoutRef.current);
-      longPressTimeoutRef.current = null;
-    }
-
-    // 如果正在长按，恢复原始播放速度
-    if (isLongPressing && artPlayerRef.current) {
-      artPlayerRef.current.playbackRate = originalPlaybackRateRef.current;
-      setIsLongPressing(false);
-      artPlayerRef.current.notice.show = '';
-    }
-  };
-
-  // 添加触摸事件监听器
-  useEffect(() => {
-    if (!artRef.current) return;
-
-    const element = artRef.current;
-    const disableContextMenu = (e: Event) => {
-      e.preventDefault();
-      e.stopPropagation();
-    };
-
-    element.addEventListener('touchstart', handleTouchStart, { passive: true });
-    element.addEventListener('touchend', handleTouchEnd, { passive: true });
-    element.addEventListener('touchcancel', handleTouchEnd, { passive: true });
-    element.addEventListener('contextmenu', disableContextMenu);
-
-    return () => {
-      element.removeEventListener('touchstart', handleTouchStart);
-      element.removeEventListener('touchend', handleTouchEnd);
-      element.removeEventListener('touchcancel', handleTouchEnd);
-      element.removeEventListener('contextmenu', disableContextMenu);
-    };
-  }, [artRef.current, isLongPressing]);
 
   if (loading) {
     return (

@@ -46,14 +46,6 @@ function LoginPageClient() {
       });
 
       if (res.ok) {
-        // 保存密码和用户名以供后续请求使用
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('password', password);
-          if (shouldAskUsername) {
-            localStorage.setItem('username', username);
-          }
-        }
-
         const redirect = searchParams.get('redirect') || '/';
         router.replace(redirect);
       } else if (res.status === 401) {
@@ -62,12 +54,14 @@ function LoginPageClient() {
         const data = await res.json().catch(() => ({}));
         setError(data.error ?? '服务器错误');
       }
+    } catch (error) {
+      setError('网络错误，请稍后重试');
     } finally {
       setLoading(false);
     }
   };
 
-  // 新增：处理注册逻辑
+  // 处理注册逻辑
   const handleRegister = async () => {
     setError(null);
     if (!password || !username) return;
@@ -81,16 +75,14 @@ function LoginPageClient() {
       });
 
       if (res.ok) {
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('password', password);
-          localStorage.setItem('username', username);
-        }
         const redirect = searchParams.get('redirect') || '/';
         router.replace(redirect);
       } else {
         const data = await res.json().catch(() => ({}));
         setError(data.error ?? '服务器错误');
       }
+    } catch (error) {
+      setError('网络错误，请稍后重试');
     } finally {
       setLoading(false);
     }
@@ -182,7 +174,7 @@ function LoginPageClient() {
 
 export default function LoginPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<div>Loading...</div>}>
       <LoginPageClient />
     </Suspense>
   );

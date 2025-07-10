@@ -63,8 +63,7 @@ export class DbManager {
     record: Omit<PlayRecord, 'user_id'>
   ): Promise<void> {
     const key = generateStorageKey(source, id);
-    const fullRecord: PlayRecord = { ...record, user_id: 0 };
-    await this.storage.setPlayRecord(userName, key, fullRecord);
+    await this.storage.setPlayRecord(userName, key, record);
   }
 
   async getAllPlayRecords(userName: string): Promise<{
@@ -96,11 +95,10 @@ export class DbManager {
     userName: string,
     source: string,
     id: string,
-    favorite: Omit<Favorite, 'user_id'>
+    favorite: Favorite
   ): Promise<void> {
     const key = generateStorageKey(source, id);
-    const fullFavorite: Favorite = { ...favorite, user_id: 0 };
-    await this.storage.setFavorite(userName, key, fullFavorite);
+    await this.storage.setFavorite(userName, key, favorite);
   }
 
   async getAllFavorites(

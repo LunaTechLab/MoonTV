@@ -38,7 +38,7 @@
 
 - [技术栈](#技术栈)
 - [部署](#部署)
-- [Docker Compose 最佳实践](#Docker Compose 最佳实践)
+- [Docker Compose 最佳实践](#Docker-Compose-最佳实践)
 - [环境变量](#环境变量)
 - [配置说明](#配置说明)
 - [管理员配置](#管理员配置)

@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any,no-console */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
+import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getConfig } from '@/lib/config';
 import { getStorage } from '@/lib/db';
 import { IStorage } from '@/lib/types';
@@ -12,12 +13,10 @@ export const runtime = 'edge';
 type Action = 'add' | 'disable' | 'enable' | 'delete' | 'sort';
 
 interface BaseBody {
-  username?: string;
-  password?: string;
   action?: Action;
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
   if (storageType === 'localstorage') {
     return NextResponse.json(
@@ -30,12 +29,17 @@ export async function POST(request: Request) {
 
   try {
     const body = (await request.json()) as BaseBody & Record<string, any>;
+    const { action } = body;
 
-    const { username, password, action } = body;
+    const authInfo = getAuthInfoFromCookie(request);
+    if (!authInfo || !authInfo.username) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const username = authInfo.username;
 
     // 基础校验
     const ACTIONS: Action[] = ['add', 'disable', 'enable', 'delete', 'sort'];
-    if (!username || !password || !action || !ACTIONS.includes(action)) {
+    if (!username || !action || !ACTIONS.includes(action)) {
       return NextResponse.json({ error: '参数格式错误' }, { status: 400 });
     }
 
@@ -44,32 +48,12 @@ export async function POST(request: Request) {
     const storage: IStorage | null = getStorage();
 
     // 权限与身份校验
-    if (username === process.env.USERNAME) {
-      if (password !== process.env.PASSWORD) {
-        return NextResponse.json(
-          { error: '用户名或密码错误' },
-          { status: 401 }
-        );
-      }
-    } else {
+    if (username !== process.env.USERNAME) {
       const userEntry = adminConfig.UserConfig.Users.find(
         (u) => u.username === username
       );
       if (!userEntry || userEntry.role !== 'admin') {
         return NextResponse.json({ error: '权限不足' }, { status: 401 });
-      }
-      if (!storage || typeof storage.verifyUser !== 'function') {
-        return NextResponse.json(
-          { error: '存储未配置用户认证' },
-          { status: 500 }
-        );
-      }
-      const pass = await storage.verifyUser(username, password);
-      if (!pass) {
-        return NextResponse.json(
-          { error: '用户名或密码错误' },
-          { status: 401 }
-        );
       }
     }
 

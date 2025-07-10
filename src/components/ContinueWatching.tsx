@@ -120,6 +120,7 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
                     progress={getProgress(record)}
                     episodes={record.total_episodes}
                     currentEpisode={record.index}
+                    from='playrecord'
                     onDelete={() =>
                       setPlayRecords((prev) =>
                         prev.filter((r) => r.key !== record.key)

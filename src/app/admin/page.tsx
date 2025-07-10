@@ -23,10 +23,11 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { ChevronDown, ChevronUp, Settings, Users, Video } from 'lucide-react';
 import { GripVertical } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import Swal from 'sweetalert2';
 
 import { AdminConfig, AdminConfigResult } from '@/lib/admin.types';
+import { getAuthInfoFromBrowserCookie } from '@/lib/auth';
 
 import PageLayout from '@/components/PageLayout';
 
@@ -118,8 +119,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
   });
 
   // 当前登录用户名
-  const currentUsername =
-    typeof window !== 'undefined' ? localStorage.getItem('username') : null;
+  const currentUsername = getAuthInfoFromBrowserCookie()?.username || null;
 
   useEffect(() => {
     if (config?.UserConfig) {
@@ -131,15 +131,6 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
 
   // 切换允许注册设置
   const toggleAllowRegister = async (value: boolean) => {
-    const username =
-      typeof window !== 'undefined' ? localStorage.getItem('username') : null;
-    const password =
-      typeof window !== 'undefined' ? localStorage.getItem('password') : null;
-    if (!username || !password) {
-      showError('无法获取当前用户信息，请重新登录');
-      return;
-    }
-
     try {
       // 先更新本地 UI
       setUserSettings((prev) => ({ ...prev, enableRegistration: value }));
@@ -148,8 +139,6 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username,
-          password,
           action: 'setAllowRegister',
           allowRegister: value,
         }),
@@ -197,23 +186,11 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
     targetUsername: string,
     targetPassword?: string
   ) => {
-    const username =
-      typeof window !== 'undefined' ? localStorage.getItem('username') : null;
-    const password =
-      typeof window !== 'undefined' ? localStorage.getItem('password') : null;
-
-    if (!username || !password) {
-      showError('无法获取当前用户信息，请重新登录');
-      return;
-    }
-
     try {
       const res = await fetch('/api/admin/user', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          username,
-          password,
           targetUsername,
           ...(targetPassword ? { targetPassword } : {}),
           action,
@@ -521,21 +498,11 @@ const VideoSourceConfig = ({
 
   // 通用 API 请求
   const callSourceApi = async (body: Record<string, any>) => {
-    const username =
-      typeof window !== 'undefined' ? localStorage.getItem('username') : null;
-    const password =
-      typeof window !== 'undefined' ? localStorage.getItem('password') : null;
-
-    if (!username || !password) {
-      showError('无法获取当前用户信息，请重新登录');
-      throw new Error('no-credential');
-    }
-
     try {
       const resp = await fetch('/api/admin/source', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, ...body }),
+        body: JSON.stringify({ ...body }),
       });
 
       if (!resp.ok) {
@@ -845,26 +812,12 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
 
   // 保存站点配置
   const handleSave = async () => {
-    const username =
-      typeof window !== 'undefined' ? localStorage.getItem('username') : null;
-    if (!username) {
-      showError('无法获取用户名，请重新登录');
-      return;
-    }
-
-    const password =
-      typeof window !== 'undefined' ? localStorage.getItem('password') : null;
-    if (!password) {
-      showError('无法获取密码，请重新登录');
-      return;
-    }
-
     try {
       setSaving(true);
       const resp = await fetch('/api/admin/site', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password, ...siteSettings }),
+        body: JSON.stringify({ ...siteSettings }),
       });
 
       if (!resp.ok) {
@@ -1005,7 +958,7 @@ const SiteConfigComponent = ({ config }: { config: AdminConfig | null }) => {
   );
 };
 
-export default function AdminPage() {
+function AdminPageClient() {
   const [config, setConfig] = useState<AdminConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1024,12 +977,7 @@ export default function AdminPage() {
         setLoading(true);
       }
 
-      const username = localStorage.getItem('username');
-      const response = await fetch(
-        `/api/admin/config${
-          username ? `?username=${encodeURIComponent(username)}` : ''
-        }`
-      );
+      const response = await fetch(`/api/admin/config`);
 
       if (!response.ok) {
         const data = (await response.json()) as any;
@@ -1065,11 +1013,6 @@ export default function AdminPage() {
 
   // 新增: 重置配置处理函数
   const handleResetConfig = async () => {
-    const username = localStorage.getItem('username');
-    if (!username) {
-      showError('无法获取用户名，请重新登录');
-      return;
-    }
     const { isConfirmed } = await Swal.fire({
       title: '确认重置配置',
       text: '此操作将重置用户封禁和管理员设置、自定义视频源，站点配置将重置为默认值，是否继续？',
@@ -1080,22 +1023,8 @@ export default function AdminPage() {
     });
     if (!isConfirmed) return;
 
-    const password = localStorage.getItem('password');
-    if (!password) {
-      showError('无法获取密码，请重新登录');
-      return;
-    }
-
     try {
-      const response = await fetch(
-        `/api/admin/reset${
-          username
-            ? `?username=${encodeURIComponent(
-                username
-              )}&password=${encodeURIComponent(password)}`
-            : ''
-        }`
-      );
+      const response = await fetch(`/api/admin/reset`);
       if (!response.ok) {
         throw new Error(`重置失败: ${response.status}`);
       }
@@ -1198,5 +1127,13 @@ export default function AdminPage() {
         </div>
       </div>
     </PageLayout>
+  );
+}
+
+export default function AdminPage() {
+  return (
+    <Suspense>
+      <AdminPageClient />
+    </Suspense>
   );
 }

@@ -20,20 +20,25 @@ import { useSite } from '@/components/SiteProvider';
 import VideoCard from '@/components/VideoCard';
 
 function HomeClient() {
-  const [activeTab, setActiveTab] = useState('home');
+  const [activeTab, setActiveTab] = useState<'home' | 'favorites'>('home');
   const [hotMovies, setHotMovies] = useState<DoubanItem[]>([]);
   const [hotTvShows, setHotTvShows] = useState<DoubanItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { announcement } = useSite();
 
-  const [showAnnouncement, setShowAnnouncement] = useState(() => {
-    // 检查本地存储中是否已记录弹窗显示状态
-    const hasSeenAnnouncement = localStorage.getItem('hasSeenAnnouncement');
-    if (hasSeenAnnouncement !== announcement) {
-      return true;
+  const [showAnnouncement, setShowAnnouncement] = useState(false);
+
+  // 检查公告弹窗状态
+  useEffect(() => {
+    if (typeof window !== 'undefined' && announcement) {
+      const hasSeenAnnouncement = localStorage.getItem('hasSeenAnnouncement');
+      if (hasSeenAnnouncement !== announcement) {
+        setShowAnnouncement(true);
+      } else {
+        setShowAnnouncement(Boolean(!hasSeenAnnouncement && announcement));
+      }
     }
-    return !hasSeenAnnouncement && announcement; // 未记录且有公告时显示弹窗
-  });
+  }, [announcement]);
 
   // 收藏夹数据
   type FavoriteItem = {
@@ -129,7 +134,7 @@ function HomeClient() {
               { label: '收藏夹', value: 'favorites' },
             ]}
             active={activeTab}
-            onChange={setActiveTab}
+            onChange={(value) => setActiveTab(value as 'home' | 'favorites')}
           />
         </div>
 
@@ -156,7 +161,7 @@ function HomeClient() {
               <div className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8 sm:px-4'>
                 {favoriteItems.map((item) => (
                   <div key={item.id + item.source} className='w-full'>
-                    <VideoCard {...item} from='favorites' />
+                    <VideoCard {...item} from='favorite' />
                   </div>
                 ))}
                 {favoriteItems.length === 0 && (
@@ -207,11 +212,10 @@ function HomeClient() {
                           className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
                         >
                           <VideoCard
-                            id=''
-                            source=''
+                            from='douban'
                             title={movie.title}
                             poster={movie.poster}
-                            source_name=''
+                            douban_id={movie.id}
                             rate={movie.rate}
                           />
                         </div>
@@ -254,11 +258,10 @@ function HomeClient() {
                           className='min-w-[96px] w-24 sm:min-w-[180px] sm:w-44'
                         >
                           <VideoCard
-                            id={show.id}
-                            source=''
+                            from='douban'
                             title={show.title}
                             poster={show.poster}
-                            source_name=''
+                            douban_id={show.id}
                             rate={show.rate}
                           />
                         </div>

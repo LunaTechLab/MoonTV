@@ -1,13 +1,14 @@
 /* eslint-disable no-console */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
 import { AdminConfigResult } from '@/lib/admin.types';
+import { getAuthInfoFromCookie } from '@/lib/auth';
 import { getConfig } from '@/lib/config';
 
 export const runtime = 'edge';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
   if (storageType === 'localstorage') {
     return NextResponse.json(
@@ -18,8 +19,11 @@ export async function GET(request: Request) {
     );
   }
 
-  const { searchParams } = new URL(request.url);
-  const username = searchParams.get('username');
+  const authInfo = getAuthInfoFromCookie(request);
+  if (!authInfo || !authInfo.username) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  const username = authInfo.username;
 
   try {
     const config = getConfig();

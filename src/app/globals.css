@@ -161,8 +161,16 @@ div[data-media-provider] video {
 }
 
 /* 隐藏移动端竖屏时的 pip 按钮 */
-@media (max-width: 768px) and (orientation: portrait) {
+@media (max-width: 768px) {
   .art-control-pip {
+    display: none !important;
+  }
+
+  .art-control-fullscreenWeb {
+    display: none !important;
+  }
+
+  .art-control-volume {
     display: none !important;
   }
 }

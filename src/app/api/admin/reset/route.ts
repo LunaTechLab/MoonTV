@@ -1,12 +1,13 @@
 /* eslint-disable no-console */
 
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
+import { getAuthInfoFromCookie } from '@/lib/auth';
 import { resetConfig } from '@/lib/config';
 
 export const runtime = 'edge';
 
-export async function GET(request: Request) {
+export async function GET(request: NextRequest) {
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
   if (storageType === 'localstorage') {
     return NextResponse.json(
@@ -17,18 +18,13 @@ export async function GET(request: Request) {
     );
   }
 
-  const { searchParams } = new URL(request.url);
-  const username = searchParams.get('username');
-  const password = searchParams.get('password');
-
-  if (!username || !password) {
-    return NextResponse.json(
-      { error: '用户名和密码不能为空' },
-      { status: 400 }
-    );
+  const authInfo = getAuthInfoFromCookie(request);
+  if (!authInfo || !authInfo.username) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+  const username = authInfo.username;
 
-  if (username !== process.env.USERNAME || password !== process.env.PASSWORD) {
+  if (username !== process.env.USERNAME) {
     return NextResponse.json({ error: '仅支持站长重置配置' }, { status: 401 });
   }
 

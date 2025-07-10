@@ -1,4 +1,4 @@
-/* eslint-disable no-console */
+/* eslint-disable no-console,@typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from 'next/server';
 
 import { getConfig } from '@/lib/config';
@@ -10,6 +10,48 @@ export const runtime = 'edge';
 const STORAGE_TYPE =
   (process.env.NEXT_PUBLIC_STORAGE_TYPE as string | undefined) ||
   'localstorage';
+
+// 生成签名
+async function generateSignature(
+  data: string,
+  secret: string
+): Promise<string> {
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(secret);
+  const messageData = encoder.encode(data);
+
+  // 导入密钥
+  const key = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+
+  // 生成签名
+  const signature = await crypto.subtle.sign('HMAC', key, messageData);
+
+  // 转换为十六进制字符串
+  return Array.from(new Uint8Array(signature))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+// 生成认证Cookie（带签名）
+async function generateAuthCookie(username: string): Promise<string> {
+  const authData: any = {
+    username,
+    timestamp: Date.now(),
+  };
+
+  // 使用process.env.PASSWORD作为签名密钥，而不是用户密码
+  const signingKey = process.env.PASSWORD || '';
+  const signature = await generateSignature(username, signingKey);
+  authData.signature = signature;
+
+  return encodeURIComponent(JSON.stringify(authData));
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -57,7 +99,19 @@ export async function POST(req: NextRequest) {
       });
       await db.saveAdminConfig(config);
 
-      return NextResponse.json({ ok: true });
+      // 注册成功，设置认证cookie
+      const response = NextResponse.json({ ok: true });
+      const cookieValue = await generateAuthCookie(username);
+      const expires = new Date();
+      expires.setDate(expires.getDate() + 7); // 7天过期
+
+      response.cookies.set('auth', cookieValue, {
+        path: '/',
+        expires,
+        sameSite: 'strict',
+      });
+
+      return response;
     } catch (err) {
       console.error('数据库注册失败', err);
       return NextResponse.json({ error: '数据库错误' }, { status: 500 });

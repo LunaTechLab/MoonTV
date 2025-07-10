@@ -10,7 +10,6 @@ export interface PlayRecord {
   play_time: number; // 播放进度（秒）
   total_time: number; // 总进度（秒）
   save_time: number; // 记录保存时间（时间戳）
-  user_id: number; // 用户ID，localStorage情况下全部为0
 }
 
 // 收藏数据结构
@@ -19,7 +18,6 @@ export interface Favorite {
   total_episodes: number; // 总集数
   title: string;
   cover: string;
-  user_id: number; // 用户ID，localStorage情况下全部为0
   save_time: number; // 记录保存时间（时间戳）
 }
 
