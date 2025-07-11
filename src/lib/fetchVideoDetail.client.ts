@@ -16,7 +16,6 @@ interface FetchVideoDetailOptions {
   source: string;
   id: string;
   fallbackTitle?: string;
-  fallbackYear?: string;
 }
 
 /**
@@ -28,7 +27,6 @@ export async function fetchVideoDetail({
   source,
   id,
   fallbackTitle = '',
-  fallbackYear = '',
 }: FetchVideoDetailOptions): Promise<VideoDetail> {
   // 优先通过搜索接口查找精确匹配
   if (fallbackTitle) {
@@ -67,7 +65,7 @@ export async function fetchVideoDetail({
     source: data?.videoInfo?.source || source,
     source_name: data?.videoInfo?.source_name || '',
     class: data?.videoInfo?.remarks || '',
-    year: data?.videoInfo?.year || fallbackYear || '',
+    year: data?.videoInfo?.year || 'unknown',
     desc: data?.videoInfo?.desc || '',
     type_name: data?.videoInfo?.type || '',
   } as VideoDetail;

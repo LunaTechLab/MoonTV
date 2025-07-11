@@ -24,6 +24,7 @@ export interface PlayRecord {
   play_time: number; // 播放进度（秒）
   total_time: number; // 总进度（秒）
   save_time: number; // 记录保存时间（时间戳）
+  search_title?: string; // 搜索时使用的标题
 }
 
 // ---- 常量 ----
@@ -308,6 +309,7 @@ export interface Favorite {
   cover: string;
   total_episodes: number;
   save_time: number;
+  search_title?: string; // 搜索时使用的标题
 }
 
 // 收藏在 localStorage 中使用的 key

@@ -72,14 +72,16 @@ async function refreshRecordAndFavorites() {
             const episodeCount = detail.episodes?.length || 0;
             if (episodeCount > 0 && episodeCount !== record.total_episodes) {
               await db.savePlayRecord(user, source, id, {
-                title: record.title,
+                title: detail.title || record.title,
                 source_name: record.source_name,
-                cover: record.cover,
+                cover: detail.poster || record.cover,
                 index: record.index,
                 total_episodes: episodeCount,
                 play_time: record.play_time,
+                year: detail.year || record.year,
                 total_time: record.total_time,
                 save_time: record.save_time,
+                search_title: record.search_title,
               });
               console.log(
                 `更新播放记录: ${record.title} (${record.total_episodes} -> ${episodeCount})`
@@ -121,11 +123,13 @@ async function refreshRecordAndFavorites() {
             const favEpisodeCount = favDetail.episodes?.length || 0;
             if (favEpisodeCount > 0 && favEpisodeCount !== fav.total_episodes) {
               await db.saveFavorite(user, source, id, {
-                title: fav.title,
+                title: favDetail.title || fav.title,
                 source_name: fav.source_name,
-                cover: fav.cover,
+                cover: favDetail.poster || fav.cover,
+                year: favDetail.year || fav.year,
                 total_episodes: favEpisodeCount,
                 save_time: fav.save_time,
+                search_title: fav.search_title,
               });
               console.log(
                 `更新收藏: ${fav.title} (${fav.total_episodes} -> ${favEpisodeCount})`

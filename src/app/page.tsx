@@ -49,6 +49,7 @@ function HomeClient() {
     episodes: number;
     source_name: string;
     currentEpisode?: number;
+    search_title?: string;
   };
 
   const [favoriteItems, setFavoriteItems] = useState<FavoriteItem[]>([]);
@@ -112,6 +113,7 @@ function HomeClient() {
             episodes: fav.total_episodes,
             source_name: fav.source_name,
             currentEpisode,
+            search_title: fav?.search_title,
           } as FavoriteItem;
         });
       setFavoriteItems(sorted);
@@ -161,7 +163,11 @@ function HomeClient() {
               <div className='justify-start grid grid-cols-3 gap-x-2 gap-y-14 sm:gap-y-20 px-2 sm:grid-cols-[repeat(auto-fill,_minmax(11rem,_1fr))] sm:gap-x-8 sm:px-4'>
                 {favoriteItems.map((item) => (
                   <div key={item.id + item.source} className='w-full'>
-                    <VideoCard {...item} from='favorite' />
+                    <VideoCard
+                      query={item.search_title}
+                      {...item}
+                      from='favorite'
+                    />
                   </div>
                 ))}
                 {favoriteItems.length === 0 && (

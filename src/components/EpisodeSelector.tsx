@@ -10,6 +10,15 @@ import React, {
 } from 'react';
 
 import { SearchResult } from '@/lib/types';
+import { getVideoResolutionFromM3u8 } from '@/lib/utils';
+
+// 定义视频信息类型
+interface VideoInfo {
+  quality: string;
+  loadSpeed: string;
+  pingTime: number;
+  hasError?: boolean; // 添加错误状态标识
+}
 
 interface EpisodeSelectorProps {
   /** 总集数 */
@@ -30,6 +39,8 @@ interface EpisodeSelectorProps {
   onSearchSources?: (query: string) => void;
   sourceSearchLoading?: boolean;
   sourceSearchError?: string | null;
+  /** 预计算的测速结果，避免重复测速 */
+  precomputedVideoInfo?: Map<string, VideoInfo>;
 }
 
 /**
@@ -48,9 +59,31 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   onSearchSources,
   sourceSearchLoading = false,
   sourceSearchError = null,
+  precomputedVideoInfo,
 }) => {
   const router = useRouter();
   const pageCount = Math.ceil(totalEpisodes / episodesPerPage);
+
+  // 存储每个源的视频信息
+  const [videoInfoMap, setVideoInfoMap] = useState<Map<string, VideoInfo>>(
+    new Map()
+  );
+  const [attemptedSources, setAttemptedSources] = useState<Set<string>>(
+    new Set()
+  );
+
+  // 使用 ref 来避免闭包问题
+  const attemptedSourcesRef = useRef<Set<string>>(new Set());
+  const videoInfoMapRef = useRef<Map<string, VideoInfo>>(new Map());
+
+  // 同步状态到 ref
+  useEffect(() => {
+    attemptedSourcesRef.current = attemptedSources;
+  }, [attemptedSources]);
+
+  useEffect(() => {
+    videoInfoMapRef.current = videoInfoMap;
+  }, [videoInfoMap]);
 
   // 主要的 tab 状态：'episodes' 或 'sources'
   // 当只有一集时默认展示 "换源"，并隐藏 "选集" 标签
@@ -64,6 +97,94 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
 
   // 是否倒序显示
   const [descending, setDescending] = useState<boolean>(false);
+
+  // 获取视频信息的函数 - 移除 attemptedSources 依赖避免不必要的重新创建
+  const getVideoInfo = useCallback(async (source: SearchResult) => {
+    const sourceKey = `${source.source}-${source.id}`;
+
+    // 使用 ref 获取最新的状态，避免闭包问题
+    if (attemptedSourcesRef.current.has(sourceKey)) {
+      return;
+    }
+
+    // 获取第一集的URL
+    const firstEpisodeUrl = source.episodes?.[0];
+    if (!firstEpisodeUrl) return;
+
+    // 标记为已尝试
+    setAttemptedSources((prev) => new Set(prev).add(sourceKey));
+
+    try {
+      const info = await getVideoResolutionFromM3u8(firstEpisodeUrl);
+      setVideoInfoMap((prev) => new Map(prev).set(sourceKey, info));
+    } catch (error) {
+      // 失败时保存错误状态
+      setVideoInfoMap((prev) =>
+        new Map(prev).set(sourceKey, {
+          quality: '错误',
+          loadSpeed: '未知',
+          pingTime: 0,
+          hasError: true,
+        })
+      );
+    }
+  }, []);
+
+  // 当有预计算结果时，先合并到videoInfoMap中
+  useEffect(() => {
+    if (precomputedVideoInfo && precomputedVideoInfo.size > 0) {
+      // 原子性地更新两个状态，避免时序问题
+      setVideoInfoMap((prev) => {
+        const newMap = new Map(prev);
+        precomputedVideoInfo.forEach((value, key) => {
+          newMap.set(key, value);
+        });
+        return newMap;
+      });
+
+      setAttemptedSources((prev) => {
+        const newSet = new Set(prev);
+        precomputedVideoInfo.forEach((info, key) => {
+          if (!info.hasError) {
+            newSet.add(key);
+          }
+        });
+        return newSet;
+      });
+
+      // 同步更新 ref，确保 getVideoInfo 能立即看到更新
+      precomputedVideoInfo.forEach((info, key) => {
+        if (!info.hasError) {
+          attemptedSourcesRef.current.add(key);
+        }
+      });
+    }
+  }, [precomputedVideoInfo]);
+
+  // 当切换到换源tab并且有源数据时，异步获取视频信息 - 移除 attemptedSources 依赖避免循环触发
+  useEffect(() => {
+    const fetchVideoInfosInBatches = async () => {
+      if (activeTab !== 'sources' || availableSources.length === 0) return;
+
+      // 筛选出尚未测速的播放源
+      const pendingSources = availableSources.filter((source) => {
+        const sourceKey = `${source.source}-${source.id}`;
+        return !attemptedSourcesRef.current.has(sourceKey);
+      });
+
+      if (pendingSources.length === 0) return;
+
+      const batchSize = Math.ceil(pendingSources.length / 2);
+
+      for (let start = 0; start < pendingSources.length; start += batchSize) {
+        const batch = pendingSources.slice(start, start + batchSize);
+        await Promise.all(batch.map(getVideoInfo));
+      }
+    };
+
+    fetchVideoInfosInBatches();
+    // 依赖项保持与之前一致
+  }, [activeTab, availableSources, getVideoInfo]);
 
   // 升序分页标签
   const categoriesAsc = useMemo(() => {
@@ -342,23 +463,86 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                         </div>
 
                         {/* 信息区域 */}
-                        <div className='flex-1 min-w-0'>
-                          <div className='flex items-start justify-between'>
-                            <div className='flex-1 min-w-0'>
-                              <h3 className='font-medium text-base truncate text-gray-900 dark:text-gray-100'>
-                                {source.title}
-                              </h3>
-                              <div className='flex items-center gap-2 mt-1'>
-                                <span className='text-xs px-2 py-1 border border-gray-500/60 rounded text-gray-700 dark:text-gray-300'>
-                                  {source.source_name}
-                                </span>
-                              </div>
-                              {source.episodes.length > 1 && (
-                                <span className='text-xs text-gray-500 dark:text-gray-400 mt-1 pl-[2px]'>
-                                  共 {source.episodes.length} 集
-                                </span>
-                              )}
-                            </div>
+                        <div className='flex-1 min-w-0 flex flex-col justify-between h-20'>
+                          {/* 标题和分辨率 - 顶部 */}
+                          <div className='flex items-start justify-between gap-2 h-6'>
+                            <h3 className='font-medium text-base truncate text-gray-900 dark:text-gray-100 leading-none'>
+                              {source.title}
+                            </h3>
+                            {(() => {
+                              const sourceKey = `${source.source}-${source.id}`;
+                              const videoInfo = videoInfoMap.get(sourceKey);
+
+                              if (videoInfo) {
+                                if (videoInfo.hasError) {
+                                  return (
+                                    <div className='bg-gray-500/10 dark:bg-gray-400/20 text-red-600 dark:text-red-400 px-1.5 py-0 rounded text-xs flex-shrink-0'>
+                                      检测失败
+                                    </div>
+                                  );
+                                } else {
+                                  // 根据分辨率设置不同颜色：1080p及以上为绿色，720p及以下为黄色
+                                  const isHighRes = [
+                                    '4K',
+                                    '2K',
+                                    '1080p',
+                                  ].includes(videoInfo.quality);
+                                  const textColorClasses = isHighRes
+                                    ? 'text-green-600 dark:text-green-400'
+                                    : 'text-yellow-600 dark:text-yellow-400';
+
+                                  return (
+                                    <div
+                                      className={`bg-gray-500/10 dark:bg-gray-400/20 ${textColorClasses} px-1.5 py-0 rounded text-xs flex-shrink-0`}
+                                    >
+                                      {videoInfo.quality}
+                                    </div>
+                                  );
+                                }
+                              }
+
+                              return null;
+                            })()}
+                          </div>
+
+                          {/* 源名称和集数信息 - 垂直居中 */}
+                          <div className='flex items-center justify-between'>
+                            <span className='text-xs px-2 py-1 border border-gray-500/60 rounded text-gray-700 dark:text-gray-300'>
+                              {source.source_name}
+                            </span>
+                            {source.episodes.length > 1 && (
+                              <span className='text-xs text-gray-500 dark:text-gray-400 font-medium'>
+                                {source.episodes.length} 集
+                              </span>
+                            )}
+                          </div>
+
+                          {/* 网络信息 - 底部 */}
+                          <div className='flex items-end h-6'>
+                            {(() => {
+                              const sourceKey = `${source.source}-${source.id}`;
+                              const videoInfo = videoInfoMap.get(sourceKey);
+                              if (videoInfo) {
+                                if (!videoInfo.hasError) {
+                                  return (
+                                    <div className='flex items-end gap-3 text-xs'>
+                                      <div className='text-green-600 dark:text-green-400 font-medium text-xs'>
+                                        {videoInfo.loadSpeed}
+                                      </div>
+                                      <div className='text-orange-600 dark:text-orange-400 font-medium text-xs'>
+                                        {videoInfo.pingTime}ms
+                                      </div>
+                                    </div>
+                                  );
+                                } else {
+                                  return (
+                                    <div className='text-red-500/90 dark:text-red-400 font-medium text-xs'>
+                                      无测速数据
+                                    </div>
+                                  ); // 占位div
+                                }
+                              }
+                            })()}
                           </div>
                         </div>
                       </div>

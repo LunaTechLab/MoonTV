@@ -60,7 +60,7 @@ export class DbManager {
     userName: string,
     source: string,
     id: string,
-    record: Omit<PlayRecord, 'user_id'>
+    record: PlayRecord
   ): Promise<void> {
     const key = generateStorageKey(source, id);
     await this.storage.setPlayRecord(userName, key, record);
@@ -129,7 +129,7 @@ export class DbManager {
     userName: string,
     source: string,
     id: string,
-    favoriteData?: Omit<Favorite, 'user_id'>
+    favoriteData?: Favorite
   ): Promise<boolean> {
     const isFav = await this.isFavorited(userName, source, id);
 

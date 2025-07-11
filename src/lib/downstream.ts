@@ -84,7 +84,9 @@ export async function searchFromApi(
         source: apiSite.key,
         source_name: apiName,
         class: item.vod_class,
-        year: item.vod_year ? item.vod_year.match(/\d{4}/)?.[0] || '' : '',
+        year: item.vod_year
+          ? item.vod_year.match(/\d{4}/)?.[0] || ''
+          : 'unknown',
         desc: cleanHtmlTags(item.vod_content || ''),
         type_name: item.type_name,
         douban_id: item.vod_douban_id,
@@ -154,7 +156,7 @@ export async function searchFromApi(
                 class: item.vod_class,
                 year: item.vod_year
                   ? item.vod_year.match(/\d{4}/)?.[0] || ''
-                  : '',
+                  : 'unknown',
                 desc: cleanHtmlTags(item.vod_content || ''),
                 type_name: item.type_name,
                 douban_id: item.vod_douban_id,
@@ -261,7 +263,7 @@ export async function getDetailFromApi(
       type: videoDetail.type_name,
       year: videoDetail.vod_year
         ? videoDetail.vod_year.match(/\d{4}/)?.[0] || ''
-        : '',
+        : 'unknown',
       area: videoDetail.vod_area,
       director: videoDetail.vod_director,
       actor: videoDetail.vod_actor,
@@ -328,6 +330,10 @@ async function handleSpecialSourceDetail(
   const coverMatch = html.match(/(https?:\/\/[^"'\s]+?\.jpg)/g);
   const coverUrl = coverMatch ? coverMatch[0].trim() : '';
 
+  // 提取年份
+  const yearMatch = html.match(/>(\d{4})</);
+  const yearText = yearMatch ? yearMatch[1] : 'unknown';
+
   return {
     code: 200,
     episodes: matches,
@@ -338,6 +344,7 @@ async function handleSpecialSourceDetail(
       desc: descText,
       source_name: apiSite.name,
       source: apiSite.key,
+      year: yearText,
       id,
     },
   };

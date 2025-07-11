@@ -62,19 +62,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 保存播放记录（不包含user_id，将由savePlayRecord自动添加）
-    const recordWithoutUserId = {
-      title: record.title,
-      source_name: record.source_name,
-      cover: record.cover,
-      index: record.index,
-      total_episodes: record.total_episodes,
-      play_time: record.play_time,
-      total_time: record.total_time,
-      save_time: record.save_time,
-    };
-
-    await db.savePlayRecord(authInfo.username, source, id, recordWithoutUserId);
+    await db.savePlayRecord(authInfo.username, source, id, record);
 
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (err) {
