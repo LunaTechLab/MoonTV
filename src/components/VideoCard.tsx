@@ -46,7 +46,6 @@ export default function VideoCard({
   const router = useRouter();
   const [favorited, setFavorited] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const isAggregate = from === 'search' && !!items?.length;
 
@@ -119,7 +118,7 @@ export default function VideoCard({
   }, [from, actualSource, actualId]);
 
   const handleToggleFavorite = useCallback(
-    async (e: React.MouseEvent<HTMLDivElement>) => {
+    async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
 
@@ -152,7 +151,7 @@ export default function VideoCard({
   );
 
   const handleDeleteRecord = useCallback(
-    async (e: React.MouseEvent<HTMLDivElement>) => {
+    async (e: React.MouseEvent) => {
       e.preventDefault();
       e.stopPropagation();
 
@@ -160,7 +159,6 @@ export default function VideoCard({
 
       try {
         await deletePlayRecord(actualSource, actualId);
-        setIsDeleting(true);
         onDelete?.();
       } catch (err) {
         throw new Error('删除播放记录失败');
@@ -239,15 +237,11 @@ export default function VideoCard({
 
   return (
     <div
-      className={`group relative w-full rounded-lg bg-transparent transition-all duration-300 transform ${
-        isDeleting
-          ? 'opacity-0 scale-90 translate-y-4'
-          : 'hover:-translate-y-1 hover:scale-[1.02]'
-      }`}
+      className='group relative w-full rounded-lg bg-transparent'
       onClick={handleClick}
     >
       {/* 海报容器 */}
-      <div className='relative aspect-[2/3] overflow-hidden rounded-lg transition-all duration-300'>
+      <div className='relative aspect-[2/3] overflow-hidden rounded-lg'>
         {/* 骨架屏 */}
         {!isLoaded && <ImagePlaceholder aspectRatio='aspect-[2/3]' />}
 
@@ -270,7 +264,7 @@ export default function VideoCard({
             <PlayCircleIcon
               size={52}
               strokeWidth={1}
-              className='text-white transition-all duration-300 transform hover:scale-110 hover:fill-green-500 rounded-full cursor-pointer opacity-80 hover:opacity-100'
+              className='rounded-full cursor-pointer play-icon-fixed'
             />
           )}
 
@@ -278,38 +272,25 @@ export default function VideoCard({
           {(config.showHeart || config.showCheckCircle) && (
             <div className='absolute bottom-3 right-3 flex items-center gap-3 transform translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 ease-out'>
               {config.showCheckCircle && (
-                <button
-                  onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                    handleDeleteRecord(
-                      e as unknown as React.MouseEvent<HTMLDivElement>
-                    )
-                  }
-                  title='标记为已看'
-                  className='p-1.5 rounded-full transition-all duration-300 transform hover:scale-110 hover:bg-white/30'
-                >
-                  <CheckCircle size={20} className='text-white' />
-                </button>
+                <CheckCircle
+                  onClick={handleDeleteRecord}
+                  size={20}
+                  className='rounded-full transition-all duration-300ms transform hover:scale-110 text-white hover:stroke-green-500'
+                  aria-label='标记为已看'
+                />
               )}
 
               {config.showHeart && (
-                <button
-                  onClick={(e: React.MouseEvent<HTMLButtonElement>) =>
-                    handleToggleFavorite(
-                      e as unknown as React.MouseEvent<HTMLDivElement>
-                    )
-                  }
-                  title={favorited ? '取消收藏' : '加入收藏'}
-                  className='p-1.5 rounded-full transition-all duration-300 transform hover:scale-110 hover:bg-white/30'
-                >
-                  <Heart
-                    size={20}
-                    className={`transition-all duration-300 ${
-                      favorited
-                        ? 'fill-red-600 stroke-red-600'
-                        : 'fill-transparent stroke-white hover:stroke-red-400'
-                    }`}
-                  />
-                </button>
+                <Heart
+                  onClick={handleToggleFavorite}
+                  size={20}
+                  className={`rounded-full transition-all duration-300ms transform hover:scale-110 ${
+                    favorited
+                      ? 'fill-red-600 stroke-red-600'
+                      : 'fill-transparent stroke-white hover:stroke-red-400'
+                  }`}
+                  aria-label={favorited ? '取消收藏' : '加入收藏'}
+                />
               )}
             </div>
           )}

@@ -72,9 +72,9 @@ export async function getVideoResolutionFromM3u8(m3u8Url: string): Promise<{
           hasMetadataLoaded &&
           (hasSpeedCalculated || actualLoadSpeed !== '未知')
         ) {
+          clearTimeout(timeout);
           const width = video.videoWidth;
           if (width && width > 0) {
-            clearTimeout(timeout);
             hls.destroy();
             video.remove();
 
@@ -94,6 +94,13 @@ export async function getVideoResolutionFromM3u8(m3u8Url: string): Promise<{
 
             resolve({
               quality,
+              loadSpeed: actualLoadSpeed,
+              pingTime: Math.round(pingTime),
+            });
+          } else {
+            // webkit 无法获取尺寸，直接返回
+            resolve({
+              quality: '未知',
               loadSpeed: actualLoadSpeed,
               pingTime: Math.round(pingTime),
             });

@@ -120,14 +120,6 @@ function shouldSkipAuth(pathname: string): boolean {
     '/icons/',
     '/logo.png',
     '/screenshot.png',
-
-    // 临时开启，后续完整对接后关闭
-    '/api/detail',
-    '/api/search',
-    '/api/search/one',
-    '/api/search/resources',
-    '/api/image-proxy',
-    '/api/douban',
   ];
 
   return skipPaths.some((path) => pathname.startsWith(path));
@@ -135,5 +127,7 @@ function shouldSkipAuth(pathname: string): boolean {
 
 // 配置middleware匹配规则
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|api/detail|api/search|api/image-proxy|api/douban).*)',
+  ],
 };

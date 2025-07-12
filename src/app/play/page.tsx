@@ -176,10 +176,11 @@ function PlayPageClient() {
               return null;
             }
 
-            const firstEpisodeUrl = source.episodes[0];
-            const testResult = await getVideoResolutionFromM3u8(
-              firstEpisodeUrl
-            );
+            const episodeUrl =
+              source.episodes.length > 1
+                ? source.episodes[1]
+                : source.episodes[0];
+            const testResult = await getVideoResolutionFromM3u8(episodeUrl);
 
             return {
               source,
@@ -309,7 +310,7 @@ function PlayPageClient() {
         case 'SD':
           return 20;
         default:
-          return 30;
+          return 0;
       }
     })();
     score += qualityScore * 0.4;
@@ -1260,7 +1261,6 @@ function PlayPageClient() {
         if (artPlayerRef.current.currentTime > 0) {
           return;
         }
-        setError('视频播放失败');
       });
 
       // 监听视频播放结束事件，自动播放下一集

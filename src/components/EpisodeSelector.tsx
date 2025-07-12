@@ -108,14 +108,17 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
     }
 
     // 获取第一集的URL
-    const firstEpisodeUrl = source.episodes?.[0];
-    if (!firstEpisodeUrl) return;
+    if (!source.episodes || source.episodes.length === 0) {
+      return;
+    }
+    const episodeUrl =
+      source.episodes.length > 1 ? source.episodes[1] : source.episodes[0];
 
     // 标记为已尝试
     setAttemptedSources((prev) => new Set(prev).add(sourceKey));
 
     try {
-      const info = await getVideoResolutionFromM3u8(firstEpisodeUrl);
+      const info = await getVideoResolutionFromM3u8(episodeUrl);
       setVideoInfoMap((prev) => new Map(prev).set(sourceKey, info));
     } catch (error) {
       // 失败时保存错误状态
@@ -473,7 +476,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                               const sourceKey = `${source.source}-${source.id}`;
                               const videoInfo = videoInfoMap.get(sourceKey);
 
-                              if (videoInfo) {
+                              if (videoInfo && videoInfo.quality !== '未知') {
                                 if (videoInfo.hasError) {
                                   return (
                                     <div className='bg-gray-500/10 dark:bg-gray-400/20 text-red-600 dark:text-red-400 px-1.5 py-0 rounded text-xs flex-shrink-0'>
