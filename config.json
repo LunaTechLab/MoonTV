@@ -78,8 +78,12 @@
       "name": "iKun资源"
     },
     "yayazy": {
-      "api": "https://cj.yayazy.net/api.php/provide/vod/?ac=list",
+      "api": "https://cj.yayazy.net/api.php/provide/vod",
       "name": "鸭鸭资源"      
+    },
+    "niuniuzy": {
+      "api": "https://api.niuniuzy.me/api.php/provide/vod",
+      "name": "牛牛资源"  
       
     }
   }
