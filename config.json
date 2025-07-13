@@ -77,13 +77,13 @@
       "api": "https://ikunzyapi.com/api.php/provide/vod",
       "name": "iKun资源"
     },
-    "yayazy": {
-      "api": "https://cj.yayazy.net/api.php/provide/vod",
-      "name": "鸭鸭资源"      
+    "maotaizy": {
+      "api": "https://caiji.maotaizy.cc/api.php/provide/vod",
+      "name": "茅台资源"      
     },
-    "niuniuzy": {
-      "api": "https://api.niuniuzy.me/api.php/provide/vod",
-      "name": "牛牛资源"  
+    "qddbrowser": {
+      "api": "https://qddbrowser.com/api.php/provide/vod",
+      "name": "瀑布盘资源"  
       
     }
   }
