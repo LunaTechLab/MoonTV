@@ -62,27 +62,6 @@ export interface IStorage {
   setAdminConfig(config: AdminConfig): Promise<void>;
 }
 
-// 视频详情数据结构
-export interface VideoDetail {
-  code: number;
-  episodes: string[];
-  detailUrl: string;
-  videoInfo: {
-    title: string;
-    cover?: string;
-    desc?: string;
-    type?: string;
-    year?: string;
-    area?: string;
-    director?: string;
-    actor?: string;
-    remarks?: string;
-    source_name: string;
-    source: string;
-    id: string;
-  };
-}
-
 // 搜索结果数据结构
 export interface SearchResult {
   id: string;

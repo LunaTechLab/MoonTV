@@ -223,17 +223,14 @@ div[data-media-provider] video {
 /* 播放logo WebKit修复 - 精确控制fill动画避免闪烁 */
 .play-icon-fixed {
   --icon-fill: transparent;
-  --icon-opacity: 0.8;
   --icon-scale: 1;
 
   color: white;
   fill: var(--icon-fill);
-  opacity: var(--icon-opacity);
   transform: scale(var(--icon-scale));
 
   /* 分别控制每个属性的动画时长，避免WebKit闪烁 */
-  transition: fill 0.25s ease-out, opacity 0.25s ease-out,
-    transform 0.25s ease-out;
+  transition: fill 0.2s ease-out, transform 0.2s ease-out;
 
   /* WebKit硬件加速和防闪烁 */
   -webkit-transform: scale(var(--icon-scale)) translateZ(0);
@@ -244,6 +241,5 @@ div[data-media-provider] video {
 
 .play-icon-fixed:hover {
   --icon-fill: rgb(34, 197, 94); /* green-500 */
-  --icon-opacity: 1;
   --icon-scale: 1.1;
 }

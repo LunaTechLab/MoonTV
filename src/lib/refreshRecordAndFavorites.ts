@@ -1,7 +1,8 @@
 /* eslint-disable no-console */
 
 import { db } from '@/lib/db';
-import { type VideoDetail, fetchVideoDetail } from '@/lib/fetchVideoDetail';
+import { fetchVideoDetail } from '@/lib/fetchVideoDetail';
+import { SearchResult } from '@/lib/types';
 
 const STORAGE_TYPE = process.env.NEXT_PUBLIC_STORAGE_TYPE ?? 'localstorage';
 
@@ -16,14 +17,14 @@ async function refreshRecordAndFavorites() {
       users.push(process.env.USERNAME);
     }
     // 函数级缓存：key 为 `${source}+${id}`，值为 Promise<VideoDetail | null>
-    const detailCache = new Map<string, Promise<VideoDetail | null>>();
+    const detailCache = new Map<string, Promise<SearchResult | null>>();
 
     // 获取详情 Promise（带缓存和错误处理）
     const getDetail = async (
       source: string,
       id: string,
       fallbackTitle: string
-    ): Promise<VideoDetail | null> => {
+    ): Promise<SearchResult | null> => {
       const key = `${source}+${id}`;
       let promise = detailCache.get(key);
       if (!promise) {

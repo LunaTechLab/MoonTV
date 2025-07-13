@@ -36,7 +36,6 @@ interface EpisodeSelectorProps {
   videoTitle?: string;
   videoYear?: string;
   availableSources?: SearchResult[];
-  onSearchSources?: (query: string) => void;
   sourceSearchLoading?: boolean;
   sourceSearchError?: string | null;
   /** 预计算的测速结果，避免重复测速 */
@@ -56,7 +55,6 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   currentId,
   videoTitle,
   availableSources = [],
-  onSearchSources,
   sourceSearchLoading = false,
   sourceSearchError = null,
   precomputedVideoInfo,
@@ -207,11 +205,25 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   // 当分页切换时，将激活的分页标签滚动到视口中间
   useEffect(() => {
     const btn = buttonRefs.current[currentPage];
-    if (btn) {
-      btn.scrollIntoView({
+    const container = categoryContainerRef.current;
+    if (btn && container) {
+      // 手动计算滚动位置，只滚动分页标签容器
+      const containerRect = container.getBoundingClientRect();
+      const btnRect = btn.getBoundingClientRect();
+      const scrollLeft = container.scrollLeft;
+
+      // 计算按钮相对于容器的位置
+      const btnLeft = btnRect.left - containerRect.left + scrollLeft;
+      const btnWidth = btnRect.width;
+      const containerWidth = containerRect.width;
+
+      // 计算目标滚动位置，使按钮居中
+      const targetScrollLeft = btnLeft - (containerWidth - btnWidth) / 2;
+
+      // 平滑滚动到目标位置
+      container.scrollTo({
+        left: targetScrollLeft,
         behavior: 'smooth',
-        inline: 'center',
-        block: 'nearest',
       });
     }
   }, [currentPage, pageCount]);
@@ -219,10 +231,6 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   // 处理换源tab点击，只在点击时才搜索
   const handleSourceTabClick = () => {
     setActiveTab('sources');
-    // 只在点击时搜索，且只搜索一次
-    if (availableSources.length === 0 && videoTitle && onSearchSources) {
-      onSearchSources(videoTitle);
-    }
   };
 
   const handleCategoryClick = useCallback((index: number) => {
@@ -242,20 +250,6 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
     },
     [onSourceChange]
   );
-
-  // 如果组件初始即显示 "换源"，自动触发搜索一次
-  useEffect(() => {
-    if (
-      activeTab === 'sources' &&
-      availableSources.length === 0 &&
-      videoTitle &&
-      onSearchSources
-    ) {
-      onSearchSources(videoTitle);
-    }
-    // 只在依赖变化时尝试，availableSources 长度变化可阻止重复搜索
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, availableSources.length, videoTitle]);
 
   const currentStart = currentPage * episodesPerPage + 1;
   const currentEnd = Math.min(

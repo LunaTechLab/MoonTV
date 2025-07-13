@@ -1,5 +1,5 @@
 import { API_CONFIG, ApiSite, getConfig } from '@/lib/config';
-import { SearchResult, VideoDetail } from '@/lib/types';
+import { SearchResult } from '@/lib/types';
 import { cleanHtmlTags } from '@/lib/utils';
 
 const config = getConfig();
@@ -77,7 +77,7 @@ export async function searchFromApi(
       });
 
       return {
-        id: item.vod_id,
+        id: item.vod_id.toString(),
         title: item.vod_name.trim().replace(/\s+/g, ' '),
         poster: item.vod_pic,
         episodes,
@@ -147,7 +147,7 @@ export async function searchFromApi(
               });
 
               return {
-                id: item.vod_id,
+                id: item.vod_id.toString(),
                 title: item.vod_name.trim().replace(/\s+/g, ' '),
                 poster: item.vod_pic,
                 episodes,
@@ -193,7 +193,7 @@ const M3U8_PATTERN = /(https?:\/\/[^"'\s]+?\.m3u8)/g;
 export async function getDetailFromApi(
   apiSite: ApiSite,
   id: string
-): Promise<VideoDetail> {
+): Promise<SearchResult> {
   if (apiSite.detail) {
     return handleSpecialSourceDetail(id, apiSite);
   }
@@ -253,32 +253,26 @@ export async function getDetailFromApi(
   }
 
   return {
-    code: 200,
+    id: id.toString(),
+    title: videoDetail.vod_name,
+    poster: videoDetail.vod_pic,
     episodes,
-    detailUrl,
-    videoInfo: {
-      title: videoDetail.vod_name,
-      cover: videoDetail.vod_pic,
-      desc: cleanHtmlTags(videoDetail.vod_content),
-      type: videoDetail.type_name,
-      year: videoDetail.vod_year
-        ? videoDetail.vod_year.match(/\d{4}/)?.[0] || ''
-        : 'unknown',
-      area: videoDetail.vod_area,
-      director: videoDetail.vod_director,
-      actor: videoDetail.vod_actor,
-      remarks: videoDetail.vod_remarks,
-      source_name: apiSite.name,
-      source: apiSite.key,
-      id,
-    },
+    source: apiSite.key,
+    source_name: apiSite.name,
+    class: videoDetail.vod_class,
+    year: videoDetail.vod_year
+      ? videoDetail.vod_year.match(/\d{4}/)?.[0] || ''
+      : 'unknown',
+    desc: cleanHtmlTags(videoDetail.vod_content),
+    type_name: videoDetail.type_name,
+    douban_id: videoDetail.vod_douban_id,
   };
 }
 
 async function handleSpecialSourceDetail(
   id: string,
   apiSite: ApiSite
-): Promise<VideoDetail> {
+): Promise<SearchResult> {
   const detailUrl = `${apiSite.detail}/index.php/vod/detail/id/${id}.html`;
 
   const controller = new AbortController();
@@ -335,17 +329,16 @@ async function handleSpecialSourceDetail(
   const yearText = yearMatch ? yearMatch[1] : 'unknown';
 
   return {
-    code: 200,
+    id,
+    title: titleText,
+    poster: coverUrl,
     episodes: matches,
-    detailUrl,
-    videoInfo: {
-      title: titleText,
-      cover: coverUrl,
-      desc: descText,
-      source_name: apiSite.name,
-      source: apiSite.key,
-      year: yearText,
-      id,
-    },
+    source: apiSite.key,
+    source_name: apiSite.name,
+    class: '',
+    year: yearText,
+    desc: descText,
+    type_name: '',
+    douban_id: 0,
   };
 }
