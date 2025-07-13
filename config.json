@@ -77,9 +77,9 @@
       "api": "https://ikunzyapi.com/api.php/provide/vod",
       "name": "iKun资源"
     },
-    "jmzy4": {
-      "api": "https://api.jmzy.com/api.php/provide/vod",
-      "name": "金马资源"      
+    "yayazy": {
+      "api": "https://cj.yayazy.net/api.php/provide/vod/?ac=list",
+      "name": "鸭鸭资源"      
       
     }
   }
