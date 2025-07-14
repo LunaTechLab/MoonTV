@@ -226,60 +226,10 @@
       "name": "虎牙",
       "detail": "https://www.huyaapi.com"
     },
-    "kbzy": {
-      "api": "https://gayapi.com/api.php/provide/vod",
-      "name": "快播资源",
-      "detail": "https://gayapi.com"
-    },
-    "dnzzy": {
-      "api": "https://apidanaizi.com/api.php/provide/vod",
-      "name": "大奶子资源",
-      "detail": "https://apidanaizi.com"
-    },
-    "xbzy": {
-      "api": "https://xingba111.com/api.php/provide/vod",
-      "name": "杏吧资源",
-      "detail": "https://xingba111.com"
-    },
-    "hsckzy": {
-      "api": "https://hsckzy.vip/api.php/provide/vod",
-      "name": "黄色仓库资源",
-      "detail": "https://hsckzy.vip"
-    },
-    "xxbzy": {
-      "api": "https://www.xxibaozyw.com/api.php/provide/vod",
-      "name": "X细胞资源",
-      "detail": "https://www.xxibaozyw.com"
-    },
-    "bwzy": {
-      "api": "https://api.baiwanapi.com/api.php/provide/vod",
-      "name": "百万资源",
-      "detail": "https://api.baiwanapi.com"
-    },
-    "swzy": {
-      "api": "https://siwazyw.tv/api.php/provide/vod",
-      "name": "丝袜资源",
-      "detail": "https://siwazyw.tv"
-    },
-    "smzy": {
-      "api": "https://caiji.semaozy.net/inc/apijson_vod",
-      "name": "色猫资源",
-      "detail": "https://caiji.semaozy.net"
-    },
-    "jkunaklmzy": {
-      "api": "https://jkunzyapi.com/api.php/provide/vod",
-      "name": "jkun爱坤联盟资源",
-      "detail": "https://jkunzyapi.com"
-    },
     "hhzyw": {
       "api": "https://hhzyapi.com/api.php/provide/vod",
       "name": "豪华资源网",
       "detail": "https://hhzyapi.com"
-    },
-    "lsbzy": {
-      "api": "https://apilsbzy1.com/api.php/provide/vod",
-      "name": "老色逼资源",
-      "detail": "https://apilsbzy1.com"
     },
     "slzy2": {
       "api": "https://slapibf.com/api.php/provide/vod",
