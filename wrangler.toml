@@ -1,8 +1,0 @@
-name = "moontv"
-compatibility_date = "2025-06-28"
-
-# 指定 Pages 产物目录，供 `wrangler pages dev` 本地预览使用
-pages_build_output_dir = ".vercel/output/static"
-
-# 开启 Node.js API 兼容层（next-on-pages 已自动注入所需 polyfill）
-compatibility_flags = ["nodejs_compat"] 

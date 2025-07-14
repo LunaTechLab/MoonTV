@@ -1,13 +1,45 @@
 /* eslint-disable no-console */
 
+import { NextRequest, NextResponse } from 'next/server';
+
 import { db } from '@/lib/db';
 import { fetchVideoDetail } from '@/lib/fetchVideoDetail';
 import { SearchResult } from '@/lib/types';
 
-const STORAGE_TYPE = process.env.NEXT_PUBLIC_STORAGE_TYPE ?? 'localstorage';
+export const runtime = 'edge';
+
+export async function GET(request: NextRequest) {
+  console.log(request.url);
+  try {
+    console.log('Cron job triggered:', new Date().toISOString());
+
+    refreshRecordAndFavorites();
+
+    return NextResponse.json({
+      success: true,
+      message: 'Cron job executed successfully',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Cron job failed:', error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        message: 'Cron job failed',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      },
+      { status: 500 }
+    );
+  }
+}
 
 async function refreshRecordAndFavorites() {
-  if (STORAGE_TYPE === 'localstorage') {
+  if (
+    process.env.NEXT_PUBLIC_STORAGE_TYPE ||
+    'localstorage' === 'localstorage'
+  ) {
     return;
   }
 
@@ -155,5 +187,3 @@ async function refreshRecordAndFavorites() {
     console.error('刷新播放记录/收藏任务启动失败', err);
   }
 }
-
-export default refreshRecordAndFavorites;

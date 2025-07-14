@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '参数格式错误' }, { status: 400 });
     }
 
-    const adminConfig = getConfig();
+    const adminConfig = await getConfig();
     const storage = getStorage();
 
     // 权限校验

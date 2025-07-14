@@ -35,7 +35,7 @@ const STORAGE_TYPE = (() => {
   const raw =
     (typeof window !== 'undefined' &&
       (window as any).RUNTIME_CONFIG?.STORAGE_TYPE) ||
-    (process.env.STORAGE_TYPE as 'localstorage' | 'redis' | undefined) ||
+    (process.env.STORAGE_TYPE as 'localstorage' | 'redis' | 'd1' | undefined) ||
     'localstorage';
   // 兼容 redis => database
   return raw;

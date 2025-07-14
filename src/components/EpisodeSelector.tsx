@@ -427,7 +427,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                     if (!aIsCurrent && bIsCurrent) return 1;
                     return 0;
                   })
-                  .map((source) => {
+                  .map((source, index) => {
                     const isCurrentSource =
                       source.source?.toString() === currentSource?.toString() &&
                       source.id?.toString() === currentId?.toString();
@@ -437,7 +437,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                         onClick={() =>
                           !isCurrentSource && handleSourceClick(source)
                         }
-                        className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 
+                        className={`flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 relative
                       ${
                         isCurrentSource
                           ? 'bg-green-500/10 dark:bg-green-500/20 border-green-500/30 border'
@@ -463,9 +463,18 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                         <div className='flex-1 min-w-0 flex flex-col justify-between h-20'>
                           {/* 标题和分辨率 - 顶部 */}
                           <div className='flex items-start justify-between gap-2 h-6'>
-                            <h3 className='font-medium text-base truncate text-gray-900 dark:text-gray-100 leading-none'>
-                              {source.title}
-                            </h3>
+                            <div className='flex-1 relative group/title'>
+                              <h3 className='font-medium text-base truncate text-gray-900 dark:text-gray-100 leading-none'>
+                                {source.title}
+                              </h3>
+                              {/* 标题级别的 tooltip - 第一个元素不显示 */}
+                              {index !== 0 && (
+                                <div className='absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 text-white text-xs rounded-md shadow-lg opacity-0 invisible group-hover/title:opacity-100 group-hover/title:visible transition-all duration-200 ease-out delay-100 whitespace-nowrap z-[9999] pointer-events-none'>
+                                  {source.title}
+                                  <div className='absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800'></div>
+                                </div>
+                              )}
+                            </div>
                             {(() => {
                               const sourceKey = `${source.source}-${source.id}`;
                               const videoInfo = videoInfoMap.get(sourceKey);
@@ -478,13 +487,16 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
                                     </div>
                                   );
                                 } else {
-                                  // 根据分辨率设置不同颜色：1080p及以上为绿色，720p及以下为黄色
-                                  const isHighRes = [
-                                    '4K',
-                                    '2K',
-                                    '1080p',
-                                  ].includes(videoInfo.quality);
-                                  const textColorClasses = isHighRes
+                                  // 根据分辨率设置不同颜色：2K、4K为紫色，1080p、720p为绿色，其他为黄色
+                                  const isUltraHigh = ['4K', '2K'].includes(
+                                    videoInfo.quality
+                                  );
+                                  const isHigh = ['1080p', '720p'].includes(
+                                    videoInfo.quality
+                                  );
+                                  const textColorClasses = isUltraHigh
+                                    ? 'text-purple-600 dark:text-purple-400'
+                                    : isHigh
                                     ? 'text-green-600 dark:text-green-400'
                                     : 'text-yellow-600 dark:text-yellow-400';
 

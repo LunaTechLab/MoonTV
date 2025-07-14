@@ -262,7 +262,7 @@ export default function VideoCard({
             <PlayCircleIcon
               size={50}
               strokeWidth={0.8}
-              className='rounded-full play-icon-fixed'
+              className='rounded-full text-white fill-transparent transition-[fill,transform] duration-200 ease-out [-webkit-transform:translateZ(0)] [-webkit-backface-visibility:hidden] [backface-visibility:hidden] [will-change:transform,fill,opacity] hover:fill-green-500 hover:scale-110'
             />
           </div>
         )}
@@ -337,9 +337,16 @@ export default function VideoCard({
       )}
 
       {/* 标题与来源信息 - 改进颜色过渡和延迟 */}
-      <span className='mt-2 block text-center text-sm font-semibold truncate text-gray-900 dark:text-gray-100 transition-all duration-300 ease-out group-hover:text-green-600 dark:group-hover:text-green-400'>
-        {actualTitle}
-      </span>
+      <div className='relative'>
+        <span className='mt-2 block text-center text-sm font-semibold truncate text-gray-900 dark:text-gray-100 transition-all duration-300 ease-out group-hover:text-green-600 dark:group-hover:text-green-400 peer'>
+          {actualTitle}
+        </span>
+        {/* 自定义 tooltip */}
+        <div className='absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-800 text-white text-xs rounded-md shadow-lg opacity-0 invisible peer-hover:opacity-100 peer-hover:visible transition-all duration-200 ease-out delay-100 whitespace-nowrap z-50 pointer-events-none'>
+          {actualTitle}
+          <div className='absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800'></div>
+        </div>
+      </div>
       {config.showSourceName && source_name && (
         <span className='block text-center text-xs text-gray-500 dark:text-gray-400 mt-1 transition-all duration-300 ease-out delay-75 group-hover:text-green-500 dark:group-hover:text-green-500 group-hover:scale-105'>
           <span className='inline-block border rounded px-2 py-0.5 border-gray-500/60 dark:border-gray-400/60 transition-all duration-300 ease-out group-hover:border-green-500/60'>

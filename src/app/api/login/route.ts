@@ -8,8 +8,11 @@ export const runtime = 'edge';
 
 // 读取存储类型环境变量，默认 localstorage
 const STORAGE_TYPE =
-  (process.env.NEXT_PUBLIC_STORAGE_TYPE as string | undefined) ||
-  'localstorage';
+  (process.env.NEXT_PUBLIC_STORAGE_TYPE as
+    | 'localstorage'
+    | 'redis'
+    | 'd1'
+    | undefined) || 'localstorage';
 
 // 生成签名
 async function generateSignature(
@@ -147,7 +150,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: '用户名或密码错误' }, { status: 401 });
     }
 
-    const config = getConfig();
+    const config = await getConfig();
     const user = config.UserConfig.Users.find((u) => u.username === username);
     if (user && user.banned) {
       return NextResponse.json({ error: '用户被封禁' }, { status: 401 });

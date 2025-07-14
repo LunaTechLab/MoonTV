@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const query = searchParams.get('q');
 
   if (!query) {
-    const cacheTime = getCacheTime();
+    const cacheTime = await getCacheTime();
     return NextResponse.json(
       { results: [] },
       {
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const apiSites = getAvailableApiSites();
+  const apiSites = await getAvailableApiSites();
   const searchPromises = apiSites.map((site) => searchFromApi(site, query));
 
   try {

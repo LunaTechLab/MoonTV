@@ -23,7 +23,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const apiSites = getAvailableApiSites();
+  const apiSites = await getAvailableApiSites();
 
   try {
     // 根据 resourceId 查找对应的 API 站点

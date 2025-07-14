@@ -113,7 +113,12 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
     enableRegistration: false,
   });
   const [showAddUserForm, setShowAddUserForm] = useState(false);
+  const [showChangePasswordForm, setShowChangePasswordForm] = useState(false);
   const [newUser, setNewUser] = useState({
+    username: '',
+    password: '',
+  });
+  const [changePasswordUser, setChangePasswordUser] = useState({
     username: '',
     password: '',
   });
@@ -180,9 +185,49 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
     setShowAddUserForm(false);
   };
 
+  const handleChangePassword = async () => {
+    if (!changePasswordUser.username || !changePasswordUser.password) return;
+    await handleUserAction(
+      'changePassword',
+      changePasswordUser.username,
+      changePasswordUser.password
+    );
+    setChangePasswordUser({ username: '', password: '' });
+    setShowChangePasswordForm(false);
+  };
+
+  const handleShowChangePasswordForm = (username: string) => {
+    setChangePasswordUser({ username, password: '' });
+    setShowChangePasswordForm(true);
+    setShowAddUserForm(false); // 关闭添加用户表单
+  };
+
+  const handleDeleteUser = async (username: string) => {
+    const { isConfirmed } = await Swal.fire({
+      title: '确认删除用户',
+      text: `删除用户 ${username} 将同时删除其搜索历史、播放记录和收藏夹，此操作不可恢复！`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: '确认删除',
+      cancelButtonText: '取消',
+      confirmButtonColor: '#dc2626',
+    });
+
+    if (!isConfirmed) return;
+
+    await handleUserAction('deleteUser', username);
+  };
+
   // 通用请求函数
   const handleUserAction = async (
-    action: 'add' | 'ban' | 'unban' | 'setAdmin' | 'cancelAdmin',
+    action:
+      | 'add'
+      | 'ban'
+      | 'unban'
+      | 'setAdmin'
+      | 'cancelAdmin'
+      | 'changePassword'
+      | 'deleteUser',
     targetUsername: string,
     targetPassword?: string
   ) => {
@@ -271,7 +316,13 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
             用户列表
           </h4>
           <button
-            onClick={() => setShowAddUserForm(!showAddUserForm)}
+            onClick={() => {
+              setShowAddUserForm(!showAddUserForm);
+              if (showChangePasswordForm) {
+                setShowChangePasswordForm(false);
+                setChangePasswordUser({ username: '', password: '' });
+              }
+            }}
             className='px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors'
           >
             {showAddUserForm ? '取消' : '添加用户'}
@@ -306,6 +357,52 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                 className='w-full sm:w-auto px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg transition-colors'
               >
                 添加
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 修改密码表单 */}
+        {showChangePasswordForm && (
+          <div className='mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700'>
+            <h5 className='text-sm font-medium text-blue-800 dark:text-blue-300 mb-3'>
+              修改用户密码
+            </h5>
+            <div className='flex flex-col sm:flex-row gap-4 sm:gap-3'>
+              <input
+                type='text'
+                placeholder='用户名'
+                value={changePasswordUser.username}
+                disabled
+                className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 cursor-not-allowed'
+              />
+              <input
+                type='password'
+                placeholder='新密码'
+                value={changePasswordUser.password}
+                onChange={(e) =>
+                  setChangePasswordUser((prev) => ({
+                    ...prev,
+                    password: e.target.value,
+                  }))
+                }
+                className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+              />
+              <button
+                onClick={handleChangePassword}
+                disabled={!changePasswordUser.password}
+                className='w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors'
+              >
+                修改密码
+              </button>
+              <button
+                onClick={() => {
+                  setShowChangePasswordForm(false);
+                  setChangePasswordUser({ username: '', password: '' });
+                }}
+                className='w-full sm:w-auto px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors'
+              >
+                取消
               </button>
             </div>
           </div>
@@ -357,6 +454,21 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
               return (
                 <tbody className='divide-y divide-gray-200 dark:divide-gray-700'>
                   {sortedUsers.map((user) => {
+                    // 修改密码权限：站长可修改管理员和普通用户密码，管理员可修改普通用户和自己的密码，但任何人都不能修改站长密码
+                    const canChangePassword =
+                      user.role !== 'owner' && // 不能修改站长密码
+                      (role === 'owner' || // 站长可以修改管理员和普通用户密码
+                        (role === 'admin' &&
+                          (user.role === 'user' ||
+                            user.username === currentUsername))); // 管理员可以修改普通用户和自己的密码
+
+                    // 删除用户权限：站长可删除除自己外的所有用户，管理员仅可删除普通用户
+                    const canDeleteUser =
+                      user.username !== currentUsername &&
+                      (role === 'owner' || // 站长可以删除除自己外的所有用户
+                        (role === 'admin' && user.role === 'user')); // 管理员仅可删除普通用户
+
+                    // 其他操作权限：不能操作自己，站长可操作所有用户，管理员可操作普通用户
                     const canOperate =
                       user.username !== currentUsername &&
                       (role === 'owner' ||
@@ -398,8 +510,20 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                           </span>
                         </td>
                         <td className='px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2'>
+                          {/* 修改密码按钮 */}
+                          {canChangePassword && (
+                            <button
+                              onClick={() =>
+                                handleShowChangePasswordForm(user.username)
+                              }
+                              className='inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900/40 dark:hover:bg-blue-900/60 dark:text-blue-200 transition-colors'
+                            >
+                              修改密码
+                            </button>
+                          )}
                           {canOperate && (
                             <>
+                              {/* 其他操作按钮 */}
                               {user.role === 'user' && (
                                 <button
                                   onClick={() => handleSetAdmin(user.username)}
@@ -437,6 +561,15 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                                   </button>
                                 ))}
                             </>
+                          )}
+                          {/* 删除用户按钮 - 放在最后，使用更明显的红色样式 */}
+                          {canDeleteUser && (
+                            <button
+                              onClick={() => handleDeleteUser(user.username)}
+                              className='inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 transition-colors'
+                            >
+                              删除用户
+                            </button>
                           )}
                         </td>
                       </tr>

@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 获取配置与存储
-    const adminConfig = getConfig();
+    const adminConfig = await getConfig();
     const storage: IStorage | null = getStorage();
 
     // 权限与身份校验

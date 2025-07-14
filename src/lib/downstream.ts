@@ -2,9 +2,6 @@ import { API_CONFIG, ApiSite, getConfig } from '@/lib/config';
 import { SearchResult } from '@/lib/types';
 import { cleanHtmlTags } from '@/lib/utils';
 
-const config = getConfig();
-const MAX_SEARCH_PAGES: number = config.SiteConfig.SearchDownstreamMaxPage;
-
 interface ApiSearchItem {
   vod_id: string;
   vod_name: string;
@@ -92,6 +89,9 @@ export async function searchFromApi(
         douban_id: item.vod_douban_id,
       };
     });
+
+    const config = await getConfig();
+    const MAX_SEARCH_PAGES: number = config.SiteConfig.SearchDownstreamMaxPage;
 
     // 获取总页数
     const pageCount = data.pagecount || 1;

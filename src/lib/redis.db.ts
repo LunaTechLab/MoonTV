@@ -180,6 +180,41 @@ export class RedisStorage implements IStorage {
     return exists === 1;
   }
 
+  // 修改用户密码
+  async changePassword(userName: string, newPassword: string): Promise<void> {
+    // 简单存储明文密码，生产环境应加密
+    await withRetry(() =>
+      this.client.set(this.userPwdKey(userName), newPassword)
+    );
+  }
+
+  // 删除用户及其所有数据
+  async deleteUser(userName: string): Promise<void> {
+    // 删除用户密码
+    await withRetry(() => this.client.del(this.userPwdKey(userName)));
+
+    // 删除搜索历史
+    await withRetry(() => this.client.del(this.shKey(userName)));
+
+    // 删除播放记录
+    const playRecordPattern = `u:${userName}:pr:*`;
+    const playRecordKeys = await withRetry(() =>
+      this.client.keys(playRecordPattern)
+    );
+    if (playRecordKeys.length > 0) {
+      await withRetry(() => this.client.del(playRecordKeys));
+    }
+
+    // 删除收藏夹
+    const favoritePattern = `u:${userName}:fav:*`;
+    const favoriteKeys = await withRetry(() =>
+      this.client.keys(favoritePattern)
+    );
+    if (favoriteKeys.length > 0) {
+      await withRetry(() => this.client.del(favoriteKeys));
+    }
+  }
+
   // ---------- 搜索历史 ----------
   private shKey(user: string) {
     return `u:${user}:sh`; // u:username:sh

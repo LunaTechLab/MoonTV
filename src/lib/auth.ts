@@ -36,10 +36,17 @@ export function getAuthInfoFromBrowserCookie(): {
   try {
     // 解析 document.cookie
     const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-      const [key, value] = cookie.trim().split('=');
-      if (key && value) {
-        acc[key] = value;
+      const trimmed = cookie.trim();
+      const firstEqualIndex = trimmed.indexOf('=');
+
+      if (firstEqualIndex > 0) {
+        const key = trimmed.substring(0, firstEqualIndex);
+        const value = trimmed.substring(firstEqualIndex + 1);
+        if (key && value) {
+          acc[key] = value;
+        }
       }
+
       return acc;
     }, {} as Record<string, string>);
 
@@ -48,7 +55,14 @@ export function getAuthInfoFromBrowserCookie(): {
       return null;
     }
 
-    const decoded = decodeURIComponent(authCookie);
+    // 处理可能的双重编码
+    let decoded = decodeURIComponent(authCookie);
+
+    // 如果解码后仍然包含 %，说明是双重编码，需要再次解码
+    if (decoded.includes('%')) {
+      decoded = decodeURIComponent(decoded);
+    }
+
     const authData = JSON.parse(decoded);
     return authData;
   } catch (error) {

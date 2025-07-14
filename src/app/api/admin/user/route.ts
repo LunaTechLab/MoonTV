@@ -17,6 +17,8 @@ const ACTIONS = [
   'setAdmin',
   'cancelAdmin',
   'setAllowRegister',
+  'changePassword',
+  'deleteUser',
 ] as const;
 
 export async function POST(request: NextRequest) {
@@ -59,7 +61,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '缺少目标用户名' }, { status: 400 });
     }
 
-    if (action !== 'setAllowRegister' && username === targetUsername) {
+    if (
+      action !== 'setAllowRegister' &&
+      action !== 'changePassword' &&
+      action !== 'deleteUser' &&
+      username === targetUsername
+    ) {
       return NextResponse.json(
         { error: '无法对自己进行此操作' },
         { status: 400 }
@@ -67,7 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 获取配置与存储
-    const adminConfig = getConfig();
+    const adminConfig = await getConfig();
     const storage: IStorage | null = getStorage();
 
     // 判定操作者角色
@@ -89,7 +96,11 @@ export async function POST(request: NextRequest) {
       (u) => u.username === targetUsername
     );
 
-    if (targetEntry && targetEntry.role === 'owner') {
+    if (
+      targetEntry &&
+      targetEntry.role === 'owner' &&
+      action !== 'changePassword'
+    ) {
       return NextResponse.json({ error: '无法操作站长' }, { status: 400 });
     }
 
@@ -211,6 +222,88 @@ export async function POST(request: NextRequest) {
             );
           }
           targetEntry.role = 'user';
+          break;
+        }
+        case 'changePassword': {
+          if (!targetEntry) {
+            return NextResponse.json(
+              { error: '目标用户不存在' },
+              { status: 404 }
+            );
+          }
+          if (!targetPassword) {
+            return NextResponse.json({ error: '缺少新密码' }, { status: 400 });
+          }
+
+          // 权限检查：不允许修改站长密码
+          if (targetEntry.role === 'owner') {
+            return NextResponse.json(
+              { error: '无法修改站长密码' },
+              { status: 401 }
+            );
+          }
+
+          if (
+            isTargetAdmin &&
+            operatorRole !== 'owner' &&
+            username !== targetUsername
+          ) {
+            return NextResponse.json(
+              { error: '仅站长可修改其他管理员密码' },
+              { status: 401 }
+            );
+          }
+
+          if (!storage || typeof storage.changePassword !== 'function') {
+            return NextResponse.json(
+              { error: '存储未配置密码修改功能' },
+              { status: 500 }
+            );
+          }
+
+          await storage.changePassword(targetUsername!, targetPassword);
+          break;
+        }
+        case 'deleteUser': {
+          if (!targetEntry) {
+            return NextResponse.json(
+              { error: '目标用户不存在' },
+              { status: 404 }
+            );
+          }
+
+          // 权限检查：站长可删除所有用户（除了自己），管理员可删除普通用户
+          if (username === targetUsername) {
+            return NextResponse.json(
+              { error: '不能删除自己' },
+              { status: 400 }
+            );
+          }
+
+          if (isTargetAdmin && operatorRole !== 'owner') {
+            return NextResponse.json(
+              { error: '仅站长可删除管理员' },
+              { status: 401 }
+            );
+          }
+
+          if (!storage || typeof storage.deleteUser !== 'function') {
+            return NextResponse.json(
+              { error: '存储未配置用户删除功能' },
+              { status: 500 }
+            );
+          }
+
+          await storage.deleteUser(targetUsername!);
+
+          // 从配置中移除用户
+          const userIndex = adminConfig.UserConfig.Users.findIndex(
+            (u) => u.username === targetUsername
+          );
+          if (userIndex > -1) {
+            adminConfig.UserConfig.Users.splice(userIndex, 1);
+          }
+
           break;
         }
         default:
