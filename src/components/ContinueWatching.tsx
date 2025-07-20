@@ -143,6 +143,7 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
                         prev.filter((r) => r.key !== record.key)
                       )
                     }
+                    type={record.total_episodes > 1 ? 'tv' : ''}
                   />
                 </div>
               );

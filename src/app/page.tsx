@@ -190,6 +190,7 @@ function HomeClient() {
                       query={item.search_title}
                       {...item}
                       from='favorite'
+                      type={item.episodes > 1 ? 'tv' : ''}
                     />
                   </div>
                 ))}
@@ -247,6 +248,7 @@ function HomeClient() {
                             douban_id={movie.id}
                             rate={movie.rate}
                             year={movie.year}
+                            type='movie'
                           />
                         </div>
                       ))}
