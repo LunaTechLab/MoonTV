@@ -226,16 +226,25 @@ function DoubanPageClient() {
   // 处理选择器变化
   const handlePrimaryChange = useCallback(
     (value: string) => {
-      setLoading(true);
-      setPrimarySelection(value);
+      // 只有当值真正改变时才设置loading状态
+      if (value !== primarySelection) {
+        setLoading(true);
+        setPrimarySelection(value);
+      }
     },
-    [type]
+    [primarySelection]
   );
 
-  const handleSecondaryChange = useCallback((value: string) => {
-    setLoading(true);
-    setSecondarySelection(value);
-  }, []);
+  const handleSecondaryChange = useCallback(
+    (value: string) => {
+      // 只有当值真正改变时才设置loading状态
+      if (value !== secondarySelection) {
+        setLoading(true);
+        setSecondarySelection(value);
+      }
+    },
+    [secondarySelection]
+  );
 
   const getPageTitle = () => {
     // 根据 type 生成标题
