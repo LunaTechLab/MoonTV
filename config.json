@@ -80,6 +80,10 @@
     "155": {
       "api": "https://155zy.com/api.php/provide/vod",
       "name": "155资源"
+    },
+    "mtzy": {
+      "api": "https://mtzy.me/api.php/provide/vod",
+      "name": "茅台资源"
     }
   }
 }
