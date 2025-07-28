@@ -84,6 +84,18 @@
     "xiaomaomi": {
       "api": "https://zy.xmm.hk/api.php/provide/vod",
       "name": "小猫咪资源"
-    }
+    },
+     "yutu": {
+      "api": "https://apiyutu.com/api.php/provide/vod",
+      "name": "玉兔资源"
+     },
+     "GAY": {
+      "api": "https://gayapi.com/api.php/provide/vod",
+      "name": "GAY资源"
+     },
+     "GAY": {
+      "18+": "https://www.caoliuzyw.com/api.php/provide/vod",
+      "name": "18+"
+    } 
   }
 }
