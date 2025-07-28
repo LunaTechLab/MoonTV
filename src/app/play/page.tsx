@@ -6,7 +6,8 @@ import Artplayer from 'artplayer';
 import Hls from 'hls.js';
 import { Heart } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import {
   deleteFavorite,
@@ -158,6 +159,285 @@ function PlayPageClient() {
   const [videoLoadingStage, setVideoLoadingStage] = useState<
     'initing' | 'sourceChanging'
   >('initing');
+
+  // 跳过片头/片尾相关变量（等价于 Vue 的 ref 声明）
+  const [skipIntro, setSkipIntro] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const val = localStorage.getItem('skipIntro');
+      return val === 'true';
+    }
+    return false;
+  });
+  const [skipTime, setSkipTime] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const val = localStorage.getItem('skipTime');
+      return val ? parseInt(val) : 90;
+    }
+    return 90;
+  });
+  const [skipOutro, setSkipOutro] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const val = localStorage.getItem('skipOutro');
+      return val === 'true';
+    }
+    return false;
+  });
+  const [skipOutroTime, setSkipOutroTime] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const val = localStorage.getItem('skipOutroTime');
+      return val ? parseInt(val) : 90;
+    }
+    return 90;
+  });
+
+  // 使用 ref 来存储最新的跳过时间值，供播放器事件监听器使用
+  const skipIntroRef = useRef(skipIntro);
+  const skipTimeRef = useRef(skipTime);
+  const skipOutroRef = useRef(skipOutro);
+  const skipOutroTimeRef = useRef(skipOutroTime);
+
+  // 同步最新值到 refs
+  useEffect(() => {
+    skipIntroRef.current = skipIntro;
+    skipTimeRef.current = skipTime;
+    skipOutroRef.current = skipOutro;
+    skipOutroTimeRef.current = skipOutroTime;
+  }, [skipIntro, skipTime, skipOutro, skipOutroTime]);
+
+  // 时间设置模态框状态
+  const [timeSettingModal, setTimeSettingModal] = useState<{
+    isOpen: boolean;
+    type: 'intro' | 'outro';
+    currentValue: number;
+  }>({
+    isOpen: false,
+    type: 'intro',
+    currentValue: 0,
+  });
+  const [tempTimeValue, setTempTimeValue] = useState('');
+  // 移除未使用的 wasPlayingBeforeModal
+  const wasPlayingBeforeModalRef = useRef(false);
+
+  // 动态更新设置项的 tooltip
+  const updateSettingTooltip = (settingKey: string, newTooltip: string) => {
+    if (artPlayerRef.current && artPlayerRef.current.setting) {
+      try {
+        // 查找对应的设置项并更新 tooltip
+        const settings = artPlayerRef.current.setting.option;
+        let targetSetting: any = null;
+
+        if (settingKey === 'skipIntro') {
+          targetSetting = settings.find(
+            (item: any) => item.html === '跳过片头'
+          );
+        } else if (settingKey === 'skipOutro') {
+          targetSetting = settings.find(
+            (item: any) => item.html === '跳过片尾'
+          );
+        } else if (settingKey === 'timeSettings') {
+          // 更新时间设置主选项的 tooltip
+          targetSetting = settings.find(
+            (item: any) => item.html === '时间设置'
+          );
+        } else if (settingKey === 'skipIntroTime') {
+          // 更新时间设置子选项的 tooltip
+          const timeSettingItem = settings.find(
+            (item: any) => item.html === '时间设置'
+          );
+          if (timeSettingItem && timeSettingItem.selector) {
+            const introSubItem = timeSettingItem.selector.find(
+              (sub: any) => sub.html === '片头时间'
+            );
+            if (introSubItem) {
+              introSubItem.tooltip = newTooltip;
+            }
+          }
+        } else if (settingKey === 'skipOutroTime') {
+          // 更新时间设置子选项的 tooltip
+          const timeSettingItem = settings.find(
+            (item: any) => item.html === '时间设置'
+          );
+          if (timeSettingItem && timeSettingItem.selector) {
+            const outroSubItem = timeSettingItem.selector.find(
+              (sub: any) => sub.html === '片尾时间'
+            );
+            if (outroSubItem) {
+              outroSubItem.tooltip = newTooltip;
+            }
+          }
+        }
+
+        if (targetSetting) {
+          targetSetting.tooltip = newTooltip;
+          // 如果设置面板是打开的，强制刷新
+          if (artPlayerRef.current.setting.show) {
+            artPlayerRef.current.setting.show = false;
+            setTimeout(() => {
+              if (artPlayerRef.current) {
+                artPlayerRef.current.setting.show = true;
+              }
+            }, 50);
+          }
+        }
+      } catch (error) {
+        console.warn('更新设置项 tooltip 失败:', error);
+      }
+    }
+  };
+
+  // 关闭时间设置模态框
+  const closeTimeSettingModal = useCallback(() => {
+    console.log(
+      '关闭模态框，wasPlayingBeforeModalRef.current:',
+      wasPlayingBeforeModalRef.current
+    );
+    // 如果之前在播放，恢复播放 - 使用 ref 获取最新状态
+    if (wasPlayingBeforeModalRef.current && artPlayerRef.current) {
+      console.log('恢复播放');
+      artPlayerRef.current.play();
+    } else {
+      console.log('不需要恢复播放');
+    }
+
+    setTimeSettingModal({
+      isOpen: false,
+      type: 'intro',
+      currentValue: 0,
+    });
+    setTempTimeValue('');
+    // setWasPlayingBeforeModal(false); // 已移除
+    wasPlayingBeforeModalRef.current = false;
+  }, []);
+
+  // 确认时间设置
+  const confirmTimeSettings = useCallback(() => {
+    const timeValue = parseInt(tempTimeValue);
+    if (!isNaN(timeValue) && timeValue > 0) {
+      if (timeSettingModal.type === 'intro') {
+        setSkipTime(timeValue);
+        localStorage.setItem('skipTime', String(timeValue));
+        if (artPlayerRef.current) {
+          artPlayerRef.current.notice.show = `片头跳过时间已设置为 ${timeValue} 秒`;
+          // 动态更新设置项的 tooltip
+          updateSettingTooltip('skipIntro', `已开启 (${timeValue}秒)`);
+          updateSettingTooltip('skipIntroTime', `当前: ${timeValue}秒`);
+          // 更新主时间设置选项的 tooltip
+          updateSettingTooltip(
+            'timeSettings',
+            `片头: ${timeValue}秒 | 片尾: ${skipOutroTimeRef.current}秒`
+          );
+        }
+      } else {
+        setSkipOutroTime(timeValue);
+        localStorage.setItem('skipOutroTime', String(timeValue));
+        if (artPlayerRef.current) {
+          artPlayerRef.current.notice.show = `片尾跳过时间已设置为 ${timeValue} 秒`;
+          // 动态更新设置项的 tooltip
+          updateSettingTooltip('skipOutro', `已开启 (${timeValue}秒)`);
+          updateSettingTooltip('skipOutroTime', `当前: ${timeValue}秒`);
+          // 更新主时间设置选项的 tooltip
+          updateSettingTooltip(
+            'timeSettings',
+            `片头: ${skipTimeRef.current}秒 | 片尾: ${timeValue}秒`
+          );
+        }
+      }
+    }
+    closeTimeSettingModal();
+  }, [tempTimeValue, timeSettingModal.type, closeTimeSettingModal]);
+
+  // 打开时间设置模态框
+  const openTimeSettingModal = useCallback((type: 'intro' | 'outro') => {
+    // 使用 ref 获取最新值
+    const currentValue =
+      type === 'intro' ? skipTimeRef.current : skipOutroTimeRef.current;
+
+    // 检查播放器是否正在播放
+    let wasPlaying = false;
+    if (artPlayerRef.current) {
+      // 使用 playing 属性来判断播放状态
+      const isPlaying = artPlayerRef.current.playing;
+
+      if (isPlaying) {
+        wasPlaying = true;
+        console.log('播放器正在播放，暂停播放');
+        artPlayerRef.current.pause(); // 暂停播放
+      } else {
+        console.log('播放器已暂停，不需要暂停');
+      }
+    } else {
+      console.log('播放器未初始化');
+    }
+
+    console.log('设置 wasPlaying 状态:', wasPlaying);
+    wasPlayingBeforeModalRef.current = wasPlaying; // 同时更新 ref
+    setTimeSettingModal({
+      isOpen: true,
+      type,
+      currentValue,
+    });
+    setTempTimeValue(String(currentValue));
+  }, []);
+
+  // 简化输入框处理
+  const handleTimeInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setTempTimeValue(e.target.value);
+    },
+    []
+  );
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        confirmTimeSettings();
+      }
+      if (e.key === 'Escape') {
+        closeTimeSettingModal();
+      }
+    },
+    [confirmTimeSettings, closeTimeSettingModal]
+  );
+
+  // 简化的时间设置模态框组件
+  const renderTimeSettingModal = () => (
+    <div className='fixed inset-0 z-[9999] flex items-center justify-center bg-black/50'>
+      {/* 简化的模态框内容 */}
+      <div className='bg-white dark:bg-gray-800 rounded p-4 w-80 mx-4'>
+        <h3 className='text-base font-medium text-gray-900 dark:text-gray-100 mb-2'>
+          设置{timeSettingModal.type === 'intro' ? '跳过片头' : '跳过片尾'}时间
+        </h3>
+        <div className='mb-4'>
+          <input
+            type='number'
+            min='1'
+            max='600'
+            className='w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100'
+            placeholder='输入秒数'
+            value={tempTimeValue}
+            onChange={handleTimeInputChange}
+            onKeyDown={handleKeyDown}
+            autoFocus
+          />
+        </div>
+
+        <div className='flex justify-end space-x-2'>
+          <button
+            onClick={closeTimeSettingModal}
+            className='px-3 py-1 text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded'
+          >
+            取消
+          </button>
+          <button
+            onClick={confirmTimeSettings}
+            className='px-3 py-1 text-sm text-white bg-green-500 rounded'
+          >
+            确定
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   // 播放进度保存相关
   const saveIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -1182,6 +1462,71 @@ function PlayPageClient() {
               return newVal ? '当前开启' : '当前关闭';
             },
           },
+          {
+            html: '跳过片头',
+            tooltip: skipIntro ? `已开启 (${skipTime}秒)` : '已关闭',
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="#ffffff" d="M6.962 2.421c1.276-.171 2.908-.171 4.981-.171h.114c2.073 0 3.705 0 4.98.171c1.31.176 2.354.545 3.175 1.367c.822.821 1.19 1.866 1.367 3.174c.171 1.276.171 2.908.171 4.981v.114c0 2.073 0 3.705-.171 4.98c-.176 1.31-.545 2.354-1.367 3.175c-.821.822-1.866 1.19-3.174 1.367c-1.276.171-2.908.171-4.981.171h-.114c-2.073 0-3.705 0-4.98-.171c-1.31-.176-2.354-.545-3.175-1.367c-.822-.821-1.19-1.866-1.367-3.174c-.171-1.276-.171-2.908-.171-4.981v-.114c0-2.073 0-3.705.171-4.98c.176-1.31.545-2.354 1.367-3.175c.821-.822 1.866-1.19 3.174-1.367m4.773 4.432a.75.75 0 0 0-1.431-.132L8.492 11.25H7a.75.75 0 0 0 0 1.5h2a.75.75 0 0 0 .696-.472l1.063-2.657l1.506 7.526a.75.75 0 0 0 1.431.132l1.812-4.529H17a.75.75 0 0 0 0-1.5h-2a.75.75 0 0 0-.696.471L13.24 14.38z"/></svg>',
+            switch: skipIntro,
+            onSwitch: function (item) {
+              const nextState = !item.switch;
+              setSkipIntro(nextState);
+              localStorage.setItem('skipIntro', String(nextState));
+              // 更新 tooltip - 使用 ref 中的最新值
+              const newTooltip = nextState
+                ? `已开启 (${skipTimeRef.current}秒)`
+                : '已关闭';
+              updateSettingTooltip('skipIntro', newTooltip);
+              // 如果开启了跳过片头，打开时间设置模态框
+              if (nextState) {
+                openTimeSettingModal('intro');
+              }
+              return nextState;
+            },
+          },
+          {
+            html: '跳过片尾',
+            tooltip: skipOutro ? `已开启 (${skipOutroTime}秒)` : '已关闭',
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="#ffffff" d="M6.962 2.421c1.276-.171 2.908-.171 4.981-.171h.114c2.073 0 3.705 0 4.98.171c1.31.176 2.354.545 3.175 1.367c.822.821 1.19 1.866 1.367 3.174c.171 1.276.171 2.908.171 4.981v.114c0 2.073 0 3.705-.171 4.98c-.176 1.31-.545 2.354-1.367 3.175c-.821.822-1.866 1.19-3.174 1.367c-1.276.171-2.908.171-4.981.171h-.114c-2.073 0-3.705 0-4.98-.171c-1.31-.176-2.354-.545-3.175-1.367c-.822-.821-1.19-1.866-1.367-3.174c-.171-1.276-.171-2.908-.171-4.981v-.114c0-2.073 0-3.705.171-4.98c.176-1.31.545-2.354 1.367-3.175c.821-.822 1.866-1.19 3.174-1.367m4.773 4.432a.75.75 0 0 0-1.431-.132L8.492 11.25H7a.75.75 0 0 0 0 1.5h2a.75.75 0 0 0 .696-.472l1.063-2.657l1.506 7.526a.75.75 0 0 0 1.431.132l1.812-4.529H17a.75.75 0 0 0 0-1.5h-2a.75.75 0 0 0-.696.471L13.24 14.38z"/></svg>',
+            switch: skipOutro,
+            onSwitch: function (item) {
+              const nextState = !item.switch;
+              setSkipOutro(nextState);
+              localStorage.setItem('skipOutro', String(nextState));
+              // 更新 tooltip - 使用 ref 中的最新值
+              const newTooltip = nextState
+                ? `已开启 (${skipOutroTimeRef.current}秒)`
+                : '已关闭';
+              updateSettingTooltip('skipOutro', newTooltip);
+              // 如果开启了跳过片尾，打开时间设置模态框
+              if (nextState) {
+                openTimeSettingModal('outro');
+              }
+              return nextState;
+            },
+          },
+          {
+            html: '时间设置',
+            tooltip: '',
+            icon: '<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24"><path fill="#ffffff" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10s10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5l1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>',
+            selector: [
+              {
+                html: '片头时间',
+                tooltip: `当前: ${skipTime}秒`,
+                onClick() {
+                  openTimeSettingModal('intro');
+                  return '设置片头时间';
+                },
+              },
+              {
+                html: '片尾时间',
+                tooltip: `当前: ${skipOutroTime}秒`,
+                onClick() {
+                  openTimeSettingModal('outro');
+                  return '设置片尾时间';
+                },
+              },
+            ],
+          },
         ],
         // 控制栏配置
         controls: [
@@ -1256,6 +1601,34 @@ function PlayPageClient() {
       });
 
       artPlayerRef.current.on('video:timeupdate', () => {
+        const currentTime = artPlayerRef.current.currentTime;
+        const duration = artPlayerRef.current.duration;
+        // 处理跳过片头 - 使用 ref 中的最新值
+        if (
+          skipIntroRef.current &&
+          currentTime > 0 &&
+          currentTime < skipTimeRef.current
+        ) {
+          artPlayerRef.current.currentTime = skipTimeRef.current;
+          artPlayerRef.current.notice.show = `已跳过片头 ${skipTimeRef.current} 秒`;
+        }
+        // 处理跳过片尾 - 使用 ref 中的最新值
+        if (skipOutroRef.current && duration > 0) {
+          const remainingTime = duration - currentTime;
+          if (remainingTime <= skipOutroTimeRef.current && remainingTime > 0) {
+            // autoPlayNext和hasNextEpisode逻辑请根据实际变量调整
+            if (
+              artPlayerRef.current.autoPlayNext &&
+              artPlayerRef.current.hasNextEpisode
+            ) {
+              handleNextEpisode();
+              artPlayerRef.current.notice.show = '已跳过片尾并播放下一集';
+            } else if (!artPlayerRef.current.autoPlayNext) {
+              artPlayerRef.current.currentTime = duration;
+              artPlayerRef.current.notice.show = `已跳过片尾 ${skipOutroTimeRef.current} 秒`;
+            }
+          }
+        }
         const now = Date.now();
         let interval = 5000;
         if (process.env.NEXT_PUBLIC_STORAGE_TYPE === 'd1') {
@@ -1664,6 +2037,11 @@ function PlayPageClient() {
           </div>
         </div>
       </div>
+
+      {/* 使用 Portal 将时间设置模态框渲染到 document.body */}
+      {typeof window !== 'undefined' &&
+        timeSettingModal.isOpen &&
+        createPortal(renderTimeSettingModal(), document.body)}
     </PageLayout>
   );
 }
