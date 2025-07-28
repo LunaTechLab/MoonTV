@@ -14,9 +14,10 @@ export async function middleware(request: NextRequest) {
 
   const storageType = process.env.NEXT_PUBLIC_STORAGE_TYPE || 'localstorage';
 
-  // 如果没有设置密码，直接放行
-  if (storageType === 'localstorage' && !process.env.PASSWORD) {
-    return NextResponse.next();
+  if (!process.env.PASSWORD) {
+    // 如果没有设置密码，重定向到警告页面
+    const warningUrl = new URL('/warning', request.url);
+    return NextResponse.redirect(warningUrl);
   }
 
   // 从cookie获取认证信息
@@ -132,6 +133,6 @@ function shouldSkipAuth(pathname: string): boolean {
 // 配置middleware匹配规则
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|login|api/login|api/register|api/logout|api/cron|api/server-config).*)',
+    '/((?!_next/static|_next/image|favicon.ico|login|warning|api/login|api/register|api/logout|api/cron|api/server-config).*)',
   ],
 };

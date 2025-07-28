@@ -2,11 +2,70 @@
 
 'use client';
 
+import { AlertCircle, CheckCircle } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+
+import { checkForUpdates, CURRENT_VERSION, UpdateStatus } from '@/lib/version';
 
 import { useSite } from '@/components/SiteProvider';
 import { ThemeToggle } from '@/components/ThemeToggle';
+
+// 版本显示组件
+function VersionDisplay() {
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    const checkUpdate = async () => {
+      try {
+        const status = await checkForUpdates();
+        setUpdateStatus(status);
+      } catch (_) {
+        // do nothing
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    checkUpdate();
+  }, []);
+
+  return (
+    <button
+      onClick={() =>
+        window.open('https://github.com/senshinya/MoonTV', '_blank')
+      }
+      className='absolute bottom-4 left-1/2 transform -translate-x-1/2 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 transition-colors cursor-pointer'
+    >
+      <span className='font-mono'>v{CURRENT_VERSION}</span>
+      {!isChecking && updateStatus !== UpdateStatus.FETCH_FAILED && (
+        <div
+          className={`flex items-center gap-1.5 ${
+            updateStatus === UpdateStatus.HAS_UPDATE
+              ? 'text-yellow-600 dark:text-yellow-400'
+              : updateStatus === UpdateStatus.NO_UPDATE
+              ? 'text-green-600 dark:text-green-400'
+              : ''
+          }`}
+        >
+          {updateStatus === UpdateStatus.HAS_UPDATE && (
+            <>
+              <AlertCircle className='w-3.5 h-3.5' />
+              <span className='font-semibold text-xs'>有新版本</span>
+            </>
+          )}
+          {updateStatus === UpdateStatus.NO_UPDATE && (
+            <>
+              <CheckCircle className='w-3.5 h-3.5' />
+              <span className='font-semibold text-xs'>已是最新</span>
+            </>
+          )}
+        </div>
+      )}
+    </button>
+  );
+}
 
 function LoginPageClient() {
   const router = useRouter();
@@ -15,18 +74,20 @@ function LoginPageClient() {
   const [username, setUsername] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [shouldAskUsername, setShouldAskUsername] = useState(false);
+  const [enableRegister, setEnableRegister] = useState(false);
   const { siteName } = useSite();
 
-  // 当 STORAGE_TYPE 不为空且不为 localstorage 时，要求输入用户名
-  const shouldAskUsername =
-    typeof window !== 'undefined' &&
-    (window as any).RUNTIME_CONFIG?.STORAGE_TYPE &&
-    (window as any).RUNTIME_CONFIG?.STORAGE_TYPE !== 'localstorage';
-
-  // 是否允许注册
-  const enableRegister =
-    typeof window !== 'undefined' &&
-    Boolean((window as any).RUNTIME_CONFIG?.ENABLE_REGISTER);
+  // 在客户端挂载后设置配置
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storageType = (window as any).RUNTIME_CONFIG?.STORAGE_TYPE;
+      setShouldAskUsername(storageType && storageType !== 'localstorage');
+      setEnableRegister(
+        Boolean((window as any).RUNTIME_CONFIG?.ENABLE_REGISTER)
+      );
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -168,6 +229,9 @@ function LoginPageClient() {
           )}
         </form>
       </div>
+
+      {/* 版本信息显示 */}
+      <VersionDisplay />
     </div>
   );
 }

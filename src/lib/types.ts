@@ -87,6 +87,7 @@ export interface DoubanItem {
   title: string;
   poster: string;
   rate: string;
+  year: string;
 }
 
 export interface DoubanResult {

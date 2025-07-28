@@ -17,7 +17,9 @@ export async function GET(request: Request) {
       { result: null, error: '缺少必要参数: q 或 resourceId' },
       {
         headers: {
-          'Cache-Control': `public, max-age=${cacheTime}`,
+          'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+          'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+          'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
         },
       }
     );
@@ -55,7 +57,9 @@ export async function GET(request: Request) {
         { results: result },
         {
           headers: {
-            'Cache-Control': `public, max-age=${cacheTime}`,
+            'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+            'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+            'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
           },
         }
       );

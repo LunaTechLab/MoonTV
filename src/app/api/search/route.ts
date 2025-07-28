@@ -15,7 +15,9 @@ export async function GET(request: Request) {
       { results: [] },
       {
         headers: {
-          'Cache-Control': `public, max-age=${cacheTime}`,
+          'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+          'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+          'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
         },
       }
     );
@@ -33,7 +35,9 @@ export async function GET(request: Request) {
       { results: flattenedResults },
       {
         headers: {
-          'Cache-Control': `public, max-age=${cacheTime}`,
+          'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+          'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+          'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
         },
       }
     );

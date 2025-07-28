@@ -100,6 +100,7 @@ export async function GET(request: Request) {
       title: item.title,
       poster: item.cover,
       rate: item.rate,
+      year: '',
     }));
 
     const response: DoubanResult = {
@@ -111,7 +112,9 @@ export async function GET(request: Request) {
     const cacheTime = await getCacheTime();
     return NextResponse.json(response, {
       headers: {
-        'Cache-Control': `public, max-age=${cacheTime}`,
+        'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+        'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+        'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
       },
     });
   } catch (error) {
@@ -171,6 +174,7 @@ function handleTop250(pageStart: number) {
           title: title,
           poster: processedCover,
           rate: rate,
+          year: '',
         });
       }
 
@@ -183,7 +187,9 @@ function handleTop250(pageStart: number) {
       const cacheTime = await getCacheTime();
       return NextResponse.json(apiResponse, {
         headers: {
-          'Cache-Control': `public, max-age=${cacheTime}`,
+          'Cache-Control': `public, max-age=${cacheTime}, s-maxage=${cacheTime}`,
+          'CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
+          'Vercel-CDN-Cache-Control': `public, s-maxage=${cacheTime}`,
         },
       });
     })

@@ -43,7 +43,9 @@ export async function GET(request: Request) {
     }
 
     // 设置缓存头（可选）
-    headers.set('Cache-Control', 'public, max-age=15720000'); // 缓存半年
+    headers.set('Cache-Control', 'public, max-age=15720000, s-maxage=15720000'); // 缓存半年
+    headers.set('CDN-Cache-Control', 'public, s-maxage=15720000');
+    headers.set('Vercel-CDN-Cache-Control', 'public, s-maxage=15720000');
 
     // 直接返回图片流
     return new Response(imageResponse.body, {

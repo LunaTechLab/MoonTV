@@ -1,20 +1,5 @@
 import { DoubanItem, DoubanResult } from './types';
-
-interface DoubanApiResponse {
-  subjects: Array<{
-    id: string;
-    title: string;
-    cover: string;
-    rate: string;
-  }>;
-}
-
-interface DoubanRecommendsParams {
-  type: 'tv' | 'movie';
-  tag: string;
-  pageSize?: number;
-  pageStart?: number;
-}
+import { getDoubanProxyUrl } from './utils';
 
 interface DoubanCategoriesParams {
   kind: 'tv' | 'movie';
@@ -29,6 +14,7 @@ interface DoubanCategoryApiResponse {
   items: Array<{
     id: string;
     title: string;
+    card_subtitle: string;
     pic: {
       large: string;
       normal: string;
@@ -37,56 +23,6 @@ interface DoubanCategoryApiResponse {
       value: number;
     };
   }>;
-}
-
-/**
- * 浏览器端豆瓣数据获取函数
- */
-export async function fetchDoubanRecommends(
-  params: DoubanRecommendsParams
-): Promise<DoubanResult> {
-  const { type, tag, pageSize = 16, pageStart = 0 } = params;
-
-  // 验证参数
-  if (!['tv', 'movie'].includes(type)) {
-    throw new Error('type 参数必须是 tv 或 movie');
-  }
-
-  if (pageSize < 1 || pageSize > 100) {
-    throw new Error('pageSize 必须在 1-100 之间');
-  }
-
-  if (pageStart < 0) {
-    throw new Error('pageStart 不能小于 0');
-  }
-
-  const target = `https://movie.douban.com/j/search_subjects?type=${type}&tag=${tag}&sort=recommend&page_limit=${pageSize}&page_start=${pageStart}`;
-
-  try {
-    const response = await fetchWithTimeout(target);
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! Status: ${response.status}`);
-    }
-
-    const doubanData: DoubanApiResponse = await response.json();
-
-    // 转换数据格式
-    const list: DoubanItem[] = doubanData.subjects.map((item) => ({
-      id: item.id,
-      title: item.title,
-      poster: item.cover,
-      rate: item.rate,
-    }));
-
-    return {
-      code: 200,
-      message: '获取成功',
-      list: list,
-    };
-  } catch (error) {
-    throw new Error(`获取豆瓣数据失败: ${(error as Error).message}`);
-  }
 }
 
 /**
@@ -126,44 +62,10 @@ async function fetchWithTimeout(
 }
 
 /**
- * 获取豆瓣代理 URL 设置
- */
-export function getDoubanProxyUrl(): string | null {
-  if (typeof window === 'undefined') return null;
-
-  const doubanProxyUrl = localStorage.getItem('doubanProxyUrl');
-  return doubanProxyUrl && doubanProxyUrl.trim() ? doubanProxyUrl.trim() : null;
-}
-
-/**
  * 检查是否应该使用客户端获取豆瓣数据
  */
 export function shouldUseDoubanClient(): boolean {
   return getDoubanProxyUrl() !== null;
-}
-
-/**
- * 统一的豆瓣数据获取函数，根据代理设置选择使用服务端 API 或客户端代理获取
- */
-export async function getDoubanRecommends(
-  params: DoubanRecommendsParams
-): Promise<DoubanResult> {
-  if (shouldUseDoubanClient()) {
-    // 使用客户端代理获取（当设置了代理 URL 时）
-    return fetchDoubanRecommends(params);
-  } else {
-    // 使用服务端 API（当没有设置代理 URL 时）
-    const { type, tag, pageSize = 16, pageStart = 0 } = params;
-    const response = await fetch(
-      `/api/douban?type=${type}&tag=${tag}&pageSize=${pageSize}&pageStart=${pageStart}`
-    );
-
-    if (!response.ok) {
-      throw new Error('获取豆瓣数据失败');
-    }
-
-    return response.json();
-  }
 }
 
 /**
@@ -208,6 +110,7 @@ export async function fetchDoubanCategories(
       title: item.title,
       poster: item.pic?.normal || item.pic?.large || '',
       rate: item.rating?.value ? item.rating.value.toFixed(1) : '',
+      year: item.card_subtitle?.match(/(\d{4})/)?.[1] || '',
     }));
 
     return {

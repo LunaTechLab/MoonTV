@@ -8,6 +8,15 @@ import { Favorite, IStorage, PlayRecord } from './types';
 // 搜索历史最大条数
 const SEARCH_HISTORY_LIMIT = 20;
 
+// 数据类型转换辅助函数
+function ensureString(value: any): string {
+  return String(value);
+}
+
+function ensureStringArray(value: any[]): string[] {
+  return value.map((item) => String(item));
+}
+
 // 添加Redis操作重试包装器
 async function withRetry<T>(
   operation: () => Promise<T>,
@@ -99,7 +108,7 @@ export class RedisStorage implements IStorage {
       if (raw) {
         const rec = JSON.parse(raw) as PlayRecord;
         // 截取 source+id 部分
-        const keyPart = fullKey.replace(`u:${userName}:pr:`, '');
+        const keyPart = ensureString(fullKey.replace(`u:${userName}:pr:`, ''));
         result[keyPart] = rec;
       }
     });
@@ -142,7 +151,7 @@ export class RedisStorage implements IStorage {
       const raw = values[idx];
       if (raw) {
         const fav = JSON.parse(raw) as Favorite;
-        const keyPart = fullKey.replace(`u:${userName}:fav:`, '');
+        const keyPart = ensureString(fullKey.replace(`u:${userName}:fav:`, ''));
         result[keyPart] = fav;
       }
     });
@@ -168,7 +177,8 @@ export class RedisStorage implements IStorage {
       this.client.get(this.userPwdKey(userName))
     );
     if (stored === null) return false;
-    return stored === password;
+    // 确保比较时都是字符串类型
+    return ensureString(stored) === password;
   }
 
   // 检查用户是否存在
@@ -221,17 +231,19 @@ export class RedisStorage implements IStorage {
   }
 
   async getSearchHistory(userName: string): Promise<string[]> {
-    return withRetry(
-      () => this.client.lRange(this.shKey(userName), 0, -1) as Promise<string[]>
+    const result = await withRetry(() =>
+      this.client.lRange(this.shKey(userName), 0, -1)
     );
+    // 确保返回的都是字符串类型
+    return ensureStringArray(result as any[]);
   }
 
   async addSearchHistory(userName: string, keyword: string): Promise<void> {
     const key = this.shKey(userName);
     // 先去重
-    await withRetry(() => this.client.lRem(key, 0, keyword));
+    await withRetry(() => this.client.lRem(key, 0, ensureString(keyword)));
     // 插入到最前
-    await withRetry(() => this.client.lPush(key, keyword));
+    await withRetry(() => this.client.lPush(key, ensureString(keyword)));
     // 限制最大长度
     await withRetry(() => this.client.lTrim(key, 0, SEARCH_HISTORY_LIMIT - 1));
   }
@@ -239,7 +251,7 @@ export class RedisStorage implements IStorage {
   async deleteSearchHistory(userName: string, keyword?: string): Promise<void> {
     const key = this.shKey(userName);
     if (keyword) {
-      await withRetry(() => this.client.lRem(key, 0, keyword));
+      await withRetry(() => this.client.lRem(key, 0, ensureString(keyword)));
     } else {
       await withRetry(() => this.client.del(key));
     }
@@ -251,7 +263,7 @@ export class RedisStorage implements IStorage {
     return keys
       .map((k) => {
         const match = k.match(/^u:(.+?):pwd$/);
-        return match ? match[1] : undefined;
+        return match ? ensureString(match[1]) : undefined;
       })
       .filter((u): u is string => typeof u === 'string');
   }

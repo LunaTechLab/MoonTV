@@ -1,4 +1,11 @@
 #!/bin/sh
 . "$(dirname "$0")/_/husky.sh"
 
+# 生成版本号
+pnpm gen:version
+
+# 自动添加修改的版本文件
+git add src/lib/version.ts
+git add VERSION.txt
+
 npx lint-staged
