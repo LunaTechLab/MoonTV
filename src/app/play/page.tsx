@@ -160,7 +160,7 @@ function PlayPageClient() {
     'initing' | 'sourceChanging'
   >('initing');
 
-  // 跳过片头/片尾相关变量（等价于 Vue 的 ref 声明）
+  // 跳过片头/片尾相关变量
   const [skipIntro, setSkipIntro] = useState(() => {
     if (typeof window !== 'undefined') {
       const val = localStorage.getItem('skipIntro');
@@ -215,7 +215,6 @@ function PlayPageClient() {
     currentValue: 0,
   });
   const [tempTimeValue, setTempTimeValue] = useState('');
-  // 移除未使用的 wasPlayingBeforeModal
   const wasPlayingBeforeModalRef = useRef(false);
 
   // 动态更新设置项的 tooltip
@@ -305,7 +304,6 @@ function PlayPageClient() {
       currentValue: 0,
     });
     setTempTimeValue('');
-    // setWasPlayingBeforeModal(false); // 已移除
     wasPlayingBeforeModalRef.current = false;
   }, []);
 
