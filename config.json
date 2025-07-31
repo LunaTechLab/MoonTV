@@ -84,6 +84,9 @@
     "xiaomaomi": {
       "api": "https://zy.xmm.hk/api.php/provide/vod",
       "name": "小猫咪资源"
+    },
+    "av-47": {
+      "api": "https://4k-av.com/api.php/provide/vod"
     }
   }
 }
