@@ -93,11 +93,6 @@
       "query": "华语"
     },
     {
-      "name": "华语",
-      "type": "movie",
-      "query": "华语"
-    },
-    {
       "name": "欧美",
       "type": "movie",
       "query": "欧美"
@@ -118,9 +113,84 @@
       "query": "动作"
     },
     {
+      "name": "喜剧",
+      "type": "movie",
+      "query": "喜剧"
+    },
+    {
+      "name": "爱情",
+      "type": "movie",
+      "query": "爱情"
+    },
+    {
+      "name": "科幻",
+      "type": "movie",
+      "query": "科幻"
+    },
+    {
+      "name": "悬疑",
+      "type": "movie",
+      "query": "悬疑"
+    },
+    {
+      "name": "恐怖",
+      "type": "movie",
+      "query": "恐怖"
+    },
+    {
+      "name": "治愈",
+      "type": "movie",
+      "query": "治愈"
+    },
+    {
       "name": "热门",
       "type": "tv",
       "query": "热门"
+    },
+    {
+      "name": "美剧",
+      "type": "tv",
+      "query": "美剧"
+    },
+    {
+      "name": "英剧",
+      "type": "tv",
+      "query": "英剧"
+    },
+    {
+      "name": "韩剧",
+      "type": "tv",
+      "query": "韩剧"
+    },
+    {
+      "name": "日剧",
+      "type": "tv",
+      "query": "日剧"
+    },
+    {
+      "name": "国产剧",
+      "type": "tv",
+      "query": "国产剧"
+    },
+    {
+      "name": "港剧",
+      "type": "tv",
+      "query": "港剧"
+    },
+    {
+      "name": "日本动画",
+      "type": "tv",
+      "query": "日本动画"
+    },
+    {
+      "name": "综艺",
+      "type": "tv",
+      "query": "综艺"
+    },
+    {
+      "name": "纪录片",
+      "type": "tv",
+      "query": "纪录片"
     }
    ]
   }
