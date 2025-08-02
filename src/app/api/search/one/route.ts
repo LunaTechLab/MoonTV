@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { generateSearchVariants } from '@/lib/chinese-converter';
 import { getCacheTime, getConfig } from '@/lib/config';
 import { searchFromApi } from '@/lib/downstream';
 import { yellowWords } from '@/lib/yellow';
@@ -42,8 +43,20 @@ export async function GET(request: Request) {
       );
     }
 
-    const results = await searchFromApi(targetSite, query);
-    let result = results.filter((r) => r.title === query);
+    // 生成搜索關鍵字的繁簡變體
+    const searchVariants = generateSearchVariants(query);
+    
+    // 搜索所有變體
+    const allResults = await Promise.all(
+      searchVariants.map((variant) => searchFromApi(targetSite, variant))
+    );
+    
+    const flatResults = allResults.flat();
+    
+    // 精確匹配任一變體
+    let result = flatResults.filter((r) => 
+      searchVariants.some(variant => r.title === variant)
+    );
     if (!config.SiteConfig.DisableYellowFilter) {
       result = result.filter((result) => {
         const typeName = result.type_name || '';

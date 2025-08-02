@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { Converter } from 'opencc-js';
 
+import { generateSearchVariants } from '@/lib/chinese-converter';
 import { getCacheTime, getConfig } from '@/lib/config';
 import { searchFromApi } from '@/lib/downstream';
 import { yellowWords } from '@/lib/yellow';
@@ -26,13 +26,30 @@ export async function GET(request: Request) {
   }
 
   const config = await getConfig();
-  const simplifiedQuery = Converter({ from: 'tw', to: 'cn' })(query);
   const apiSites = config.SourceConfig.filter((site) => !site.disabled);
-  const searchPromises = apiSites.map((site) => searchFromApi(site, simplifiedQuery));
+  
+  // 生成搜索關鍵字的繁簡變體
+  const searchVariants = generateSearchVariants(query);
+  
+  // 對每個變體進行搜索
+  const searchPromises = apiSites.flatMap((site) =>
+    searchVariants.map((variant) => searchFromApi(site, variant))
+  );
 
   try {
     const results = await Promise.all(searchPromises);
     let flattenedResults = results.flat();
+    
+    // 去重：基於 id + source 組合去重
+    const uniqueResults = new Map();
+    flattenedResults.forEach((result) => {
+      const key = `${result.id}-${result.source}`;
+      if (!uniqueResults.has(key)) {
+        uniqueResults.set(key, result);
+      }
+    });
+    flattenedResults = Array.from(uniqueResults.values());
+    
     if (!config.SiteConfig.DisableYellowFilter) {
       flattenedResults = flattenedResults.filter((result) => {
         const typeName = result.type_name || '';

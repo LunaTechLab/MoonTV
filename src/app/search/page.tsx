@@ -256,7 +256,7 @@ function SearchPageClient() {
                 type='text'
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder='搜尋電影、電視劇...'
+                placeholder='搜尋電影、電視劇...（支援繁簡轉換）'
                 className='w-full h-12 rounded-lg bg-morandi-warmGray/20 py-3 pl-10 pr-4 text-sm text-stone-700 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-morandi-sage focus:bg-white border border-stone-200/50 shadow-sm dark:bg-stone-800 dark:text-stone-300 dark:placeholder-stone-500 dark:focus:bg-stone-700 dark:border-stone-700'
               />
             </div>
@@ -341,7 +341,11 @@ function SearchPageClient() {
                     ))}
                 {searchResults.length === 0 && (
                   <div className='col-span-full text-center text-gray-500 py-8 dark:text-gray-400'>
-                    未找到相關結果
+                    <Search className='mx-auto mb-4 h-12 w-12' />
+                    <p>未找到相關結果</p>
+                    <p className='text-sm mt-2 text-gray-400'>
+                      💡 提示：系統已自動搜索繁體和簡體版本
+                    </p>
                   </div>
                 )}
               </div>

@@ -4,8 +4,8 @@ import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 
 import './globals.css';
-import '../styles/animations.css';
-import '../styles/morandi-theme.css';
+import '@/styles/animations.css';
+import '@/styles/morandi-theme.css';
 import 'sweetalert2/dist/sweetalert2.min.css';
 
 import { getConfig } from '@/lib/config';
