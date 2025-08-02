@@ -116,7 +116,7 @@ export const UserMenu: React.FC = () => {
         const status = await checkForUpdates();
         setUpdateStatus(status);
       } catch (error) {
-        console.warn('版本检查失败:', error);
+        console.warn('版本檢查失敗:', error);
       } finally {
         setIsChecking(false);
       }
@@ -140,7 +140,7 @@ export const UserMenu: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
       });
     } catch (error) {
-      console.error('注销请求失败:', error);
+      console.error('登出請求失敗:', error);
     }
     window.location.href = '/';
   };
@@ -169,12 +169,12 @@ export const UserMenu: React.FC = () => {
 
     // 验证密码
     if (!newPassword) {
-      setPasswordError('新密码不得为空');
+      setPasswordError('新密碼不得為空');
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setPasswordError('两次输入的密码不一致');
+      setPasswordError('兩次輸入的密碼不一致');
       return;
     }
 
@@ -194,7 +194,7 @@ export const UserMenu: React.FC = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        setPasswordError(data.error || '修改密码失败');
+        setPasswordError(data.error || '修改密碼失敗');
         return;
       }
 
@@ -202,7 +202,7 @@ export const UserMenu: React.FC = () => {
       setIsChangePasswordOpen(false);
       await handleLogout();
     } catch (error) {
-      setPasswordError('网络错误，请稍后重试');
+      setPasswordError('網路錯誤，請稍後重試');
     } finally {
       setPasswordLoading(false);
     }
@@ -300,11 +300,11 @@ export const UserMenu: React.FC = () => {
   const getRoleText = (role?: string) => {
     switch (role) {
       case 'owner':
-        return '站长';
+        return '站長';
       case 'admin':
-        return '管理员';
+        return '管理員';
       case 'user':
-        return '用户';
+        return '用戶';
       default:
         return '';
     }
@@ -326,7 +326,7 @@ export const UserMenu: React.FC = () => {
           <div className='space-y-1'>
             <div className='flex items-center justify-between'>
               <span className='text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'>
-                当前用户
+                當前用戶
               </span>
               <span
                 className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium ${
@@ -345,7 +345,7 @@ export const UserMenu: React.FC = () => {
                 {authInfo?.username || 'default'}
               </div>
               <div className='text-[10px] text-gray-400 dark:text-gray-500'>
-                数据存储：
+                資料儲存：
                 {storageType === 'localstorage' ? '本地' : storageType}
               </div>
             </div>
@@ -360,7 +360,7 @@ export const UserMenu: React.FC = () => {
             className='w-full px-3 py-2 text-left flex items-center gap-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm'
           >
             <Settings className='w-4 h-4 text-gray-500 dark:text-gray-400' />
-            <span className='font-medium'>设置</span>
+            <span className='font-medium'>設定</span>
           </button>
 
           {/* 管理面板按钮 */}
@@ -381,7 +381,7 @@ export const UserMenu: React.FC = () => {
               className='w-full px-3 py-2 text-left flex items-center gap-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm'
             >
               <KeyRound className='w-4 h-4 text-gray-500 dark:text-gray-400' />
-              <span className='font-medium'>修改密码</span>
+              <span className='font-medium'>修改密碼</span>
             </button>
           )}
 
@@ -444,12 +444,12 @@ export const UserMenu: React.FC = () => {
         <div className='flex items-center justify-between mb-6'>
           <div className='flex items-center gap-3'>
             <h3 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
-              本地设置
+              本地設定
             </h3>
             <button
               onClick={handleResetSettings}
               className='px-2 py-1 text-xs text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 border border-red-200 hover:border-red-300 dark:border-red-800 dark:hover:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors'
-              title='重置为默认设置'
+              title='重置為預設設定'
             >
               重置
             </button>
@@ -469,10 +469,10 @@ export const UserMenu: React.FC = () => {
           <div className='flex items-center justify-between'>
             <div>
               <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-                默认聚合搜索结果
+                預設聚合搜尋結果
               </h4>
               <p className='text-xs text-gray-500 dark:text-gray-400 mt-1'>
-                搜索时默认按标题和年份聚合显示结果
+                搜尋時預設按標題和年份聚合顯示結果
               </p>
             </div>
             <label className='flex items-center cursor-pointer'>
