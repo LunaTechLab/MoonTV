@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import OpenCC from 'opencc-js';
+import { Converter } from 'opencc-js';
 
 import { getCacheTime, getConfig } from '@/lib/config';
 import { searchFromApi } from '@/lib/downstream';
@@ -26,7 +26,7 @@ export async function GET(request: Request) {
   }
 
   const config = await getConfig();
-  const simplifiedQuery = OpenCC.Converter({ from: 'tw', to: 'cn' })(query);
+  const simplifiedQuery = Converter({ from: 'tw', to: 'cn' })(query);
   const apiSites = config.SourceConfig.filter((site) => !site.disabled);
   const searchPromises = apiSites.map((site) => searchFromApi(site, simplifiedQuery));
 
