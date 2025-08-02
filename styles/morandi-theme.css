@@ -1,0 +1,182 @@
+/* 莫蘭迪色系主題 */
+
+:root {
+  /* 莫蘭迪色系調色盤 */
+  --morandi-sage: #9caf9e;
+  --morandi-dusty-rose: #d4a5a5;
+  --morandi-warm-gray: #b8b5b2;
+  --morandi-soft-blue: #a5b4cb;
+  --morandi-pale-yellow: #e8d5b7;
+  --morandi-lavender: #c8b5d1;
+  --morandi-terracotta: #d4a574;
+  --morandi-mint-green: #b5d4c1;
+  
+  /* 中性色調 */
+  --morandi-stone-50: #fafaf9;
+  --morandi-stone-100: #f5f5f4;
+  --morandi-stone-200: #e7e5e4;
+  --morandi-stone-300: #d6d3d1;
+  --morandi-stone-400: #a8a29e;
+  --morandi-stone-500: #78716c;
+  --morandi-stone-600: #57534e;
+  --morandi-stone-700: #44403c;
+  --morandi-stone-800: #292524;
+  --morandi-stone-900: #1c1917;
+}
+
+/* 莫蘭迪風格的漸變背景 */
+.morandi-gradient-light {
+  background: linear-gradient(
+    135deg,
+    var(--morandi-stone-50) 0%,
+    var(--morandi-pale-yellow) 25%,
+    var(--morandi-warm-gray) 50%,
+    var(--morandi-dusty-rose) 75%,
+    var(--morandi-sage) 100%
+  );
+}
+
+.morandi-gradient-dark {
+  background: linear-gradient(
+    135deg,
+    var(--morandi-stone-800) 0%,
+    var(--morandi-stone-700) 25%,
+    var(--morandi-stone-600) 50%,
+    #4a453f 75%,
+    #3c3530 100%
+  );
+}
+
+/* 莫蘭迪風格的卡片 */
+.morandi-card {
+  background: linear-gradient(
+    145deg,
+    rgba(184, 181, 178, 0.1) 0%,
+    rgba(212, 165, 165, 0.1) 50%,
+    rgba(156, 175, 158, 0.1) 100%
+  );
+  border: 1px solid rgba(184, 181, 178, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.dark .morandi-card {
+  background: linear-gradient(
+    145deg,
+    rgba(120, 113, 108, 0.1) 0%,
+    rgba(87, 83, 78, 0.1) 50%,
+    rgba(68, 64, 60, 0.1) 100%
+  );
+  border: 1px solid rgba(120, 113, 108, 0.2);
+}
+
+/* 莫蘭迪風格的按鈕 */
+.morandi-btn-primary {
+  background: linear-gradient(135deg, var(--morandi-sage), var(--morandi-mint-green));
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.morandi-btn-primary:hover {
+  background: linear-gradient(135deg, var(--morandi-mint-green), var(--morandi-sage));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(156, 175, 158, 0.3);
+}
+
+.morandi-btn-secondary {
+  background: linear-gradient(135deg, var(--morandi-soft-blue), var(--morandi-lavender));
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.morandi-btn-secondary:hover {
+  background: linear-gradient(135deg, var(--morandi-lavender), var(--morandi-soft-blue));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(165, 180, 203, 0.3);
+}
+
+/* 莫蘭迪風格的輸入框 */
+.morandi-input {
+  background: rgba(184, 181, 178, 0.1);
+  border: 1px solid rgba(184, 181, 178, 0.3);
+  color: var(--morandi-stone-700);
+  transition: all 0.3s ease;
+}
+
+.morandi-input:focus {
+  border-color: var(--morandi-sage);
+  box-shadow: 0 0 0 3px rgba(156, 175, 158, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.dark .morandi-input {
+  background: rgba(120, 113, 108, 0.2);
+  border: 1px solid rgba(120, 113, 108, 0.4);
+  color: var(--morandi-stone-200);
+}
+
+.dark .morandi-input:focus {
+  border-color: var(--morandi-mint-green);
+  box-shadow: 0 0 0 3px rgba(181, 212, 193, 0.1);
+  background: rgba(68, 64, 60, 0.6);
+}
+
+/* 莫蘭迪風格的導航 */
+.morandi-nav-item {
+  color: var(--morandi-stone-600);
+  transition: all 0.3s ease;
+}
+
+.morandi-nav-item:hover {
+  color: var(--morandi-sage);
+  background: rgba(156, 175, 158, 0.1);
+}
+
+.morandi-nav-item.active {
+  color: var(--morandi-sage);
+  background: rgba(156, 175, 158, 0.2);
+}
+
+.dark .morandi-nav-item {
+  color: var(--morandi-stone-300);
+}
+
+.dark .morandi-nav-item:hover {
+  color: var(--morandi-mint-green);
+  background: rgba(181, 212, 193, 0.1);
+}
+
+.dark .morandi-nav-item.active {
+  color: var(--morandi-mint-green);
+  background: rgba(181, 212, 193, 0.2);
+}
+
+/* 莫蘭迪風格的進度條 */
+.morandi-progress {
+  background: rgba(184, 181, 178, 0.2);
+}
+
+.morandi-progress-bar {
+  background: linear-gradient(90deg, var(--morandi-sage), var(--morandi-mint-green));
+}
+
+/* 莫蘭迪風格的陰影 */
+.morandi-shadow {
+  box-shadow: 
+    0 4px 6px -1px rgba(156, 175, 158, 0.1),
+    0 2px 4px -1px rgba(156, 175, 158, 0.06);
+}
+
+.morandi-shadow-lg {
+  box-shadow: 
+    0 10px 15px -3px rgba(156, 175, 158, 0.1),
+    0 4px 6px -2px rgba(156, 175, 158, 0.05);
+}
+
+/* 莫蘭迪風格的邊框 */
+.morandi-border {
+  border-color: rgba(184, 181, 178, 0.3);
+}
+
+.dark .morandi-border {
+  border-color: rgba(120, 113, 108, 0.4);
+}
