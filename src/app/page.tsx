@@ -179,7 +179,7 @@ function HomeClient() {
                 </h2>
                 {favoriteItems.length > 0 && (
                   <button
-                    className='text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                    className='text-sm text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200'
                     onClick={async () => {
                       await clearAllFavorites();
                       setFavoriteItems([]);
@@ -201,7 +201,7 @@ function HomeClient() {
                   </div>
                 ))}
                 {favoriteItems.length === 0 && (
-                  <div className='col-span-full text-center text-gray-500 py-8 dark:text-gray-400'>
+                  <div className='col-span-full text-center text-stone-500 py-8 dark:text-stone-400'>
                     暫無收藏內容
                   </div>
                 )}

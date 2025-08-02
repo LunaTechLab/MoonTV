@@ -88,12 +88,12 @@ export default function ContinueWatching({ className }: ContinueWatchingProps) {
   return (
     <section className={`mb-8 ${className || ''}`}>
       <div className='mb-4 flex items-center justify-between'>
-        <h2 className='text-xl font-bold text-gray-800 dark:text-gray-200'>
+        <h2 className='text-xl font-bold text-stone-800 dark:text-stone-200'>
           繼續觀看
         </h2>
         {!loading && playRecords.length > 0 && (
           <button
-            className='text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+            className='text-sm text-stone-500 hover:text-stone-700 dark:text-stone-400 dark:hover:text-stone-200'
             onClick={async () => {
               await clearAllPlayRecords();
               setPlayRecords([]);

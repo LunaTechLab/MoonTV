@@ -40,7 +40,7 @@ import PageLayout from '@/components/PageLayout';
 
 // 统一弹窗方法（必须在首次使用前定义）
 const showError = (message: string) =>
-  Swal.fire({ icon: 'error', title: '错误', text: message });
+  Swal.fire({ icon: 'error', title: '錯誤', text: message });
 
 const showSuccess = (message: string) =>
   Swal.fire({
@@ -230,11 +230,11 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
 
   const handleDeleteUser = async (username: string) => {
     const { isConfirmed } = await Swal.fire({
-      title: '确认删除用户',
-      text: `删除用户 ${username} 将同时删除其搜索历史、播放记录和收藏夹，此操作不可恢复！`,
+      title: '確認刪除用戶',
+      text: `刪除用戶 ${username} 將同時刪除其搜尋歷史、播放記錄和收藏夾，此操作不可恢復！`,
       icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: '确认删除',
+      confirmButtonText: '確認刪除',
       cancelButtonText: '取消',
       confirmButtonColor: '#dc2626',
     });
@@ -293,14 +293,14 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
       {/* 用户统计 */}
       <div>
         <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300 mb-3'>
-          用户统计
+          用戶統計
         </h4>
         <div className='p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800'>
           <div className='text-2xl font-bold text-green-800 dark:text-green-300'>
             {config.UserConfig.Users.length}
           </div>
           <div className='text-sm text-green-600 dark:text-green-400'>
-            总用户数
+            總用戶數
           </div>
         </div>
       </div>
@@ -308,7 +308,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
       {/* 注册设置 */}
       <div>
         <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300 mb-3'>
-          注册设置
+          註冊設定
         </h4>
         <div className='flex items-center justify-between'>
           <label
@@ -316,7 +316,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
               isD1Storage || isUpstashStorage ? 'opacity-50' : ''
             }`}
           >
-            允许新用户注册
+            允許新用戶註冊
             {isD1Storage && (
               <span className='ml-2 text-xs text-gray-500 dark:text-gray-400'>
                 (D1 环境下请通过环境变量修改)
@@ -360,7 +360,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
       <div>
         <div className='flex items-center justify-between mb-3'>
           <h4 className='text-sm font-medium text-gray-700 dark:text-gray-300'>
-            用户列表
+            用戶列表
           </h4>
           <button
             onClick={() => {
@@ -372,7 +372,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
             }}
             className='px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-sm rounded-lg transition-colors'
           >
-            {showAddUserForm ? '取消' : '添加用户'}
+            {showAddUserForm ? '取消' : '新增用戶'}
           </button>
         </div>
 
@@ -391,7 +391,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
               />
               <input
                 type='password'
-                placeholder='密码'
+                placeholder='密碼'
                 value={newUser.password}
                 onChange={(e) =>
                   setNewUser((prev) => ({ ...prev, password: e.target.value }))
@@ -403,7 +403,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                 disabled={!newUser.username || !newUser.password}
                 className='w-full sm:w-auto px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg transition-colors'
               >
-                添加
+                新增
               </button>
             </div>
           </div>
@@ -413,7 +413,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
         {showChangePasswordForm && (
           <div className='mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700'>
             <h5 className='text-sm font-medium text-blue-800 dark:text-blue-300 mb-3'>
-              修改用户密码
+              修改用戶密碼
             </h5>
             <div className='flex flex-col sm:flex-row gap-4 sm:gap-3'>
               <input
@@ -425,7 +425,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
               />
               <input
                 type='password'
-                placeholder='新密码'
+                placeholder='新密碼'
                 value={changePasswordUser.password}
                 onChange={(e) =>
                   setChangePasswordUser((prev) => ({
@@ -464,7 +464,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                   scope='col'
                   className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'
                 >
-                  用户名
+                  用戶名
                 </th>
                 <th
                   scope='col'
@@ -476,7 +476,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                   scope='col'
                   className='px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider'
                 >
-                  状态
+                  狀態
                 </th>
                 <th
                   scope='col'
@@ -539,10 +539,10 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                             }`}
                           >
                             {user.role === 'owner'
-                              ? '站长'
+                              ? '站長'
                               : user.role === 'admin'
-                              ? '管理员'
-                              : '普通用户'}
+                              ? '管理員'
+                              : '普通用戶'}
                           </span>
                         </td>
                         <td className='px-6 py-4 whitespace-nowrap'>
@@ -576,7 +576,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                                   onClick={() => handleSetAdmin(user.username)}
                                   className='inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 hover:bg-purple-200 dark:bg-purple-900/40 dark:hover:bg-purple-900/60 dark:text-purple-200 transition-colors'
                                 >
-                                  设为管理
+                                  設為管理
                                 </button>
                               )}
                               {user.role === 'admin' && (
@@ -615,7 +615,7 @@ const UserConfig = ({ config, role, refreshConfig }: UserConfigProps) => {
                               onClick={() => handleDeleteUser(user.username)}
                               className='inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium bg-red-600 text-white hover:bg-red-700 dark:bg-red-600 dark:hover:bg-red-700 transition-colors'
                             >
-                              删除用户
+                              刪除用戶
                             </button>
                           )}
                         </td>

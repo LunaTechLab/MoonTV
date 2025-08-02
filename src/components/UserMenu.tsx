@@ -359,7 +359,7 @@ export const UserMenu: React.FC = () => {
             onClick={handleSettings}
             className='w-full px-3 py-2 text-left flex items-center gap-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm'
           >
-            <Settings className='w-4 h-4 text-gray-500 dark:text-gray-400' />
+            <Settings className='w-4 h-4 text-stone-500 dark:text-stone-400' />
             <span className='font-medium'>設定</span>
           </button>
 
@@ -369,7 +369,7 @@ export const UserMenu: React.FC = () => {
               onClick={handleAdminPanel}
               className='w-full px-3 py-2 text-left flex items-center gap-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-sm'
             >
-              <Shield className='w-4 h-4 text-gray-500 dark:text-gray-400' />
+              <Shield className='w-4 h-4 text-stone-500 dark:text-stone-400' />
               <span className='font-medium'>管理面板</span>
             </button>
           )}

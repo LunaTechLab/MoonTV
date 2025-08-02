@@ -5,6 +5,7 @@ import { Inter } from 'next/font/google';
 
 import './globals.css';
 import '../styles/animations.css';
+import '../styles/morandi-theme.css';
 import 'sweetalert2/dist/sweetalert2.min.css';
 
 import { getConfig } from '@/lib/config';
@@ -104,7 +105,7 @@ export default async function RootLayout({
         />
       </head>
       <body
-        className={`${inter.className} min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 text-gray-900 dark:bg-gradient-to-br dark:from-gray-900 dark:via-slate-900 dark:to-indigo-950 dark:text-gray-200`}
+        className={`${inter.className} min-h-screen bg-gradient-to-br from-stone-100 via-rose-50 to-amber-50 text-stone-700 dark:bg-gradient-to-br dark:from-stone-800 dark:via-stone-700 dark:to-amber-900 dark:text-stone-200`}
       >
         <ThemeProvider
           attribute='class'
