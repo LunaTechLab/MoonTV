@@ -38,6 +38,9 @@ importers:
       artplayer:
         specifier: ^5.2.3
         version: 5.2.3
+      artplayer-plugin-chromecast:
+        specifier: ^1.0.0
+        version: 1.0.0
       clsx:
         specifier: ^2.0.0
         version: 2.1.1
