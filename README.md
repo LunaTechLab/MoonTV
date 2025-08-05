@@ -328,5 +328,6 @@ MoonTV 支持标准的苹果 CMS V10 API 格式。
 - 感谢所有提供免费影视接口的站点。
 
 ---
-## Star趋势
-[![Stargazers over time](https://starchart.cc/senshinya/MoonTV.svg?variant=adaptive)](https://starchart.cc/senshinya/MoonTV)
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=senshinya/MoonTV&type=Date)](https://www.star-history.com/#senshinya/MoonTV&Date)
