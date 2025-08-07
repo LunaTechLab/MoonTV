@@ -23,7 +23,11 @@ jobs:
         uses: JohnsonRan/nomore-spam@main
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          ai-base-url: ${{ secrets.AI_BASE_URL }}
-          ai-api-key: ${{ secrets.AI_API_KEY }}
-          ai-model: ${{ secrets.AI_MODEL }}
-          blacklist: ${{ secrets.BLACKLIST }}
+          
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          retain_days: 0
+          keep_minimum_runs: 2
