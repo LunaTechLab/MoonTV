@@ -18,7 +18,7 @@
     "gen:manifest": "node scripts/generate-manifest.js",
     "gen:version": "node scripts/generate-version.js",
     "postbuild": "echo 'Build completed - sitemap generation disabled'",
-    "prepare": "husky install"
+    "prepare": "pnpm gen:runtime && pnpm gen:manifest && next build && npx @cloudflare/next-on-pages --experimental-minify"
   },
   "dependencies": {
     "@cloudflare/next-on-pages": "^1.13.12",
