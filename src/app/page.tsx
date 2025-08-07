@@ -251,7 +251,7 @@ function HomeClient() {
                             from='douban'
                             title={movie.title}
                             poster={movie.poster}
-                            douban_id={movie.id}
+                            douban_id={Number(movie.id)}
                             rate={movie.rate}
                             year={movie.year}
                             type='movie'
@@ -299,7 +299,7 @@ function HomeClient() {
                             from='douban'
                             title={show.title}
                             poster={show.poster}
-                            douban_id={show.id}
+                            douban_id={Number(show.id)}
                             rate={show.rate}
                             year={show.year}
                           />
@@ -346,7 +346,7 @@ function HomeClient() {
                             from='douban'
                             title={show.title}
                             poster={show.poster}
-                            douban_id={show.id}
+                            douban_id={Number(show.id)}
                             rate={show.rate}
                             year={show.year}
                           />

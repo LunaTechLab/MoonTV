@@ -149,3 +149,16 @@ jobs:
           repository: ${{ github.repository }}
           retain_days: 0
           keep_minimum_runs: 2
+
+  version-cache-refresh:
+    runs-on: ubuntu-latest
+    needs:
+      - cleanup
+    if: always() && github.event_name != 'pull_request'
+    steps:
+      - name: Refresh VERSION.txt cache
+        run: |
+          echo "Refreshing VERSION.txt cache..."
+          curl -s https://purge.jsdelivr.net/gh/LunaTechLab/moontv/VERSION.txt
+          echo ""
+          echo "VERSION.txt cache refreshed successfully"

@@ -427,7 +427,7 @@ function DoubanPageClient() {
                       from='douban'
                       title={item.title}
                       poster={item.poster}
-                      douban_id={item.id}
+                      douban_id={Number(item.id)}
                       rate={item.rate}
                       year={item.year}
                       type={type === 'movie' ? 'movie' : ''} // 电影类型严格控制，tv 不控

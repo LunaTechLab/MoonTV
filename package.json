@@ -18,8 +18,7 @@
     "gen:manifest": "node scripts/generate-manifest.js",
     "gen:version": "node scripts/generate-version.js",
     "postbuild": "echo 'Build completed - sitemap generation disabled'",
-    "prepare": "husky install",
-    "pages:build": "pnpm gen:runtime && pnpm gen:manifest && next build && npx @cloudflare/next-on-pages --experimental-minify"
+    "prepare": "husky install"
   },
   "dependencies": {
     "@cloudflare/next-on-pages": "^1.13.12",
@@ -34,6 +33,7 @@
     "artplayer": "^5.2.3",
     "clsx": "^2.0.0",
     "framer-motion": "^12.18.1",
+    "he": "^1.2.0",
     "hls.js": "^1.6.6",
     "lucide-react": "^0.438.0",
     "media-icons": "^1.1.5",
@@ -57,6 +57,7 @@
     "@tailwindcss/forms": "^0.5.10",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^15.0.7",
+    "@types/he": "^1.2.3",
     "@types/node": "24.0.3",
     "@types/react": "^18.3.18",
     "@types/react-dom": "^19.1.6",
@@ -88,5 +89,5 @@
       "prettier -w"
     ]
   },
-  "packageManager": "pnpm@10.12.4+sha512.5ea8b0deed94ed68691c9bad4c955492705c5eeb8a87ef86bc62c74a26b037b08ff9570f108b2e4dbd1dd1a9186fea925e527f141c648e85af45631074680184"
+  "packageManager": "pnpm@10.14.0"
 }

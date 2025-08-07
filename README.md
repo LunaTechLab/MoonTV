@@ -102,29 +102,29 @@
 4. 设置环境变量 NEXT_PUBLIC_STORAGE_TYPE，值为 **upstash**；设置 USERNAME 和 PASSWORD 作为站长账号
 5. 重试部署
 
-### Cloudflare 部署
+### Cloudflare 部署（**不支持，详情请看置顶 issue**）
 
-**Cloudflare Pages 的环境变量尽量设置为密钥而非文本**
+~~**Cloudflare Pages 的环境变量尽量设置为密钥而非文本**~~
 
-#### 普通部署（localstorage）
+#### ~~普通部署（localstorage）~~
 
-1. **Fork** 本仓库到你的 GitHub 账户。
-2. 登陆 [Cloudflare](https://cloudflare.com)，点击 **计算（Workers）-> Workers 和 Pages**，点击创建
-3. 选择 Pages，导入现有的 Git 存储库，选择 Fork 后的仓库
-4. 构建命令填写 **pnpm install --frozen-lockfile && pnpm run pages:build**，预设框架为无，**构建输出目录**为 `.vercel/output/static`
-5. 保持默认设置完成首次部署。进入设置，将兼容性标志设置为 `nodejs_compat`，无需选择，直接粘贴
-6. 首次部署完成后进入设置，新增 PASSWORD 密钥（变量和机密下），而后重试部署。
-7. 如需自定义 `config.json`，请直接修改 Fork 后仓库中该文件。
-8. 每次 Push 到 `main` 分支将自动触发重新构建。
+~~1. **Fork** 本仓库到你的 GitHub 账户。~~
+~~2. 登陆 [Cloudflare](https://cloudflare.com)，点击 **计算（Workers）-> Workers 和 Pages**，点击创建~~
+~~3. 选择 Pages，导入现有的 Git 存储库，选择 Fork 后的仓库~~
+~~4. 构建命令填写 **pnpm install --frozen-lockfile && pnpm run pages:build**，预设框架为无，**构建输出目录**为 `.vercel/output/static`~~
+~~5. 保持默认设置完成首次部署。进入设置，将兼容性标志设置为 `nodejs_compat`，无需选择，直接粘贴~~
+~~6. 首次部署完成后进入设置，新增 PASSWORD 密钥（变量和机密下），而后重试部署。~~
+~~7. 如需自定义 `config.json`，请直接修改 Fork 后仓库中该文件。~~
+~~8. 每次 Push 到 `main` 分支将自动触发重新构建。~~
 
-#### D1 支持
+#### ~~D1 支持~~
 
-0. 完成普通部署并成功访问
-1. 点击 **存储和数据库 -> D1 SQL 数据库**，创建一个新的数据库，名称随意
-2. 进入刚创建的数据库，点击左上角的 Explore Data，将[D1 初始化](D1初始化.md) 中的内容粘贴到 Query 窗口后点击 **Run All**，等待运行完成
-3. 返回你的 pages 项目，进入 **设置 -> 绑定**，添加绑定 D1 数据库，选择你刚创建的数据库，变量名称填 **DB**
-4. 设置环境变量 NEXT_PUBLIC_STORAGE_TYPE，值为 **d1**；设置 USERNAME 和 PASSWORD 作为站长账号
-5. 重试部署
+~~0. 完成普通部署并成功访问~~
+~~1. 点击 **存储和数据库 -> D1 SQL 数据库**，创建一个新的数据库，名称随意~~
+~~2. 进入刚创建的数据库，点击左上角的 Explore Data，将[D1 初始化](D1初始化.md) 中的内容粘贴到 Query 窗口后点击 **Run All**，等待运行完成~~
+~~3. 返回你的 pages 项目，进入 **设置 -> 绑定**，添加绑定 D1 数据库，选择你刚创建的数据库，变量名称填 **DB**~~
+~~4. 设置环境变量 NEXT_PUBLIC_STORAGE_TYPE，值为 **d1**；设置 USERNAME 和 PASSWORD 作为站长账号~~
+~~5. 重试部署~~
 
 ### Docker 部署
 
@@ -132,11 +132,11 @@
 
 ```bash
 # 拉取预构建镜像
-docker pull ghcr.io/senshinya/moontv:latest
+docker pull ghcr.io/lunatechlab/moontv:latest
 
 # 运行容器
 # -d: 后台运行  -p: 映射端口 3000 -> 3000
-docker run -d --name moontv -p 3000:3000 --env PASSWORD=your_password ghcr.io/senshinya/moontv:latest
+docker run -d --name moontv -p 3000:3000 --env PASSWORD=your_password ghcr.io/lunatechlab/moontv:latest
 ```
 
 访问 `http://服务器 IP:3000` 即可。（需自行到服务器控制台放通 `3000` 端口）
@@ -149,9 +149,9 @@ docker run -d --name moontv -p 3000:3000 --env PASSWORD=your_password ghcr.io/se
 
 ```yaml
 services:
-  moontv:
-    image: ghcr.io/senshinya/moontv:latest
-    container_name: moontv
+  moontv-core:
+    image: ghcr.io/lunatechlab/moontv:latest
+    container_name: moontv-core
     restart: unless-stopped
     ports:
       - '3000:3000'
@@ -167,8 +167,8 @@ services:
 ```yaml
 services:
   moontv-core:
-    image: ghcr.io/senshinya/moontv:latest
-    container_name: moontv
+    image: ghcr.io/lunatechlab/moontv:latest
+    container_name: moontv-core
     restart: unless-stopped
     ports:
       - '3000:3000'
@@ -186,7 +186,7 @@ services:
     # volumes:
     #   - ./config.json:/app/config.json:ro
   moontv-redis:
-    image: redis
+    image: redis:alpine
     container_name: moontv-redis
     restart: unless-stopped
     networks:
@@ -326,3 +326,9 @@ MoonTV 支持标准的苹果 CMS V10 API 格式。
 - [ArtPlayer](https://github.com/zhw2590582/ArtPlayer) — 提供强大的网页视频播放器。
 - [HLS.js](https://github.com/video-dev/hls.js) — 实现 HLS 流媒体在浏览器中的播放支持。
 - 感谢所有提供免费影视接口的站点。
+
+---
+
+## Star 趋势
+
+[![Stargazers over time](https://starchart.cc/LunaTechLab/MoonTV.svg?variant=adaptive)](https://starchart.cc/LunaTechLab/MoonTV)

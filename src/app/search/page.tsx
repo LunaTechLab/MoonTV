@@ -322,12 +322,12 @@ function SearchPageClient() {
                       >
                         <VideoCard
                           id={item.id}
-                          title={item.title + ' ' + item.type_name}
+                          title={item.title}
                           poster={item.poster}
                           episodes={item.episodes.length}
                           source={item.source}
                           source_name={item.source_name}
-                          douban_id={item.douban_id?.toString()}
+                          douban_id={item.douban_id}
                           query={
                             searchQuery.trim() !== item.title
                               ? searchQuery.trim()

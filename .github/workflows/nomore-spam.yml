@@ -1,0 +1,29 @@
+name: NoMore Spam
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  models: read
+  actions: write
+
+jobs:
+  spam-detection:
+    runs-on: ubuntu-latest
+    name: NoMore Spam
+    
+    steps:
+      - name: Fuck All the Shit
+        uses: JohnsonRan/nomore-spam@main
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          ai-base-url: ${{ secrets.AI_BASE_URL }}
+          ai-api-key: ${{ secrets.AI_API_KEY }}
+          ai-model: ${{ secrets.AI_MODEL }}
+          blacklist: ${{ secrets.BLACKLIST }}
