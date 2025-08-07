@@ -3,6 +3,7 @@
 'use client';
 
 import Artplayer from 'artplayer';
+import artplayerPluginChromecast from 'artplayer-plugin-chromecast';
 import Hls from 'hls.js';
 import { Heart } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -1231,6 +1232,12 @@ function PlayPageClient() {
       artPlayerRef.current = new Artplayer({
         container: artRef.current,
         url: videoUrl,
+        plugins: [
+          artplayerPluginChromecast({
+            // sdk: '', // The URL of the Cast SDK
+            // mimeType: '', // The MIME type of the media
+          }),
+        ],
         poster: videoCover,
         volume: 0.7,
         isLive: false,

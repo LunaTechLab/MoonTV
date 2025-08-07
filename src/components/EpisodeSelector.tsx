@@ -94,7 +94,7 @@ const EpisodeSelector: React.FC<EpisodeSelectorProps> = ({
   const [currentPage, setCurrentPage] = useState<number>(initialPage);
 
   // 是否倒序显示
-  const [descending, setDescending] = useState<boolean>(false);
+  const [descending, setDescending] = useState<boolean>(true);
 
   // 根据 descending 状态计算实际显示的分页索引
   const displayPage = useMemo(() => {
