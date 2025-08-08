@@ -143,6 +143,21 @@
       "query": "治愈"
     },
     {
+      "name": "伦理",
+      "type": "movie",
+      "query": "伦理"
+    },
+    {
+      "name": "情色",
+      "type": "movie",
+      "query": "情色"
+    },
+    {
+      "name": "三级",
+      "type": "movie",
+      "query": "三级"
+    },
+    {
       "name": "热门",
       "type": "tv",
       "query": "热门"
