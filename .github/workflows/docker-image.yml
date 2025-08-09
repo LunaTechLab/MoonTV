@@ -11,6 +11,11 @@ on:
       - main
     paths-ignore:
       - '**.md'
+      - '.github/**'
+    types:
+      - labeled
+      - synchronize
+
   workflow_dispatch:
 
 concurrency:
